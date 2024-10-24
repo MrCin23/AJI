@@ -1,32 +1,60 @@
 "use strict"
 let todoList = []; //declares a new array for Your todo list
 
-let initList = function() {
-    let savedList = window.localStorage.getItem("todos");
-    if (savedList != null)
-        todoList = JSON.parse(savedList);
-    else
-//code creating a default list with 2 items
-    todoList.push(
-    {
-        title: "Learn JS",
-        description: "Create a demo application for my TODO's",
-        place: "445",
-        category: '',
-        dueDate: new Date(2024,10,16)
-    },
-    {
-        title: "Lecture test",
-        description: "Quick test from the first three lectures",
-        place: "F6",
-        category: '',
-        dueDate: new Date(2024,10,17)
+// let initList = function() {
+//     let savedList = window.localStorage.getItem("todos");
+//     if (savedList != null)
+//         todoList = JSON.parse(savedList);
+//     else
+// //code creating a default list with 2 items
+//     todoList.push(
+//     {
+//         title: "Learn JS",
+//         description: "Create a demo application for my TODO's",
+//         place: "445",
+//         category: '',
+//         dueDate: new Date(2024,10,16)
+//     },
+//     {
+//         title: "Lecture test",
+//         description: "Quick test from the first three lectures",
+//         place: "F6",
+//         category: '',
+//         dueDate: new Date(2024,10,17)
+//     }
+//         // of course the lecture test mentioned above will not take place
+//     );
+// }
+
+let updateJSONbin = function() {
+    let req = new XMLHttpRequest();
+
+    req.onreadystatechange = () => {
+    if (req.readyState == XMLHttpRequest.DONE) {
+        console.log(req.responseText);
     }
-        // of course the lecture test mentioned above will not take place
-    );
+    };
+
+    req.open("PUT", `https://api.jsonbin.io/v3/b/${config.BINID}`, true);
+    req.setRequestHeader("Content-Type", "application/json");
+    req.setRequestHeader("X-Master-Key", config.XMasterKey);
+    req.send('{"sample": "Hello World"}');
 }
 
-initList();
+let req = new XMLHttpRequest();
+
+req.onreadystatechange = () => {
+    if (req.readyState == XMLHttpRequest.DONE) {
+        todoList.push(req.responseText);
+        //console.log(req.responseText);
+    }
+};
+
+req.open("GET", `https://api.jsonbin.io/v3/b/${config.BINID}/latest`, true);
+req.setRequestHeader("X-Master-Key", config.XMasterKey);
+req.send();
+
+//initList();
 
 let updateTodoList = function() {
     let todoListDiv =
