@@ -26,19 +26,19 @@ let todoList = []; //declares a new array for Your todo list
 //     );
 // }
 
-let updateJSONbin = function() {
+let updateJSONbin = function(todoObj) {
     let req = new XMLHttpRequest();
-
     req.onreadystatechange = () => {
     if (req.readyState == XMLHttpRequest.DONE) {
-        console.log(req.responseText);
+        todoList.push(req.responseText);
     }
     };
-
+    console.log(todoObj);
     req.open("PUT", `https://api.jsonbin.io/v3/b/${config.BINID}`, true);
     req.setRequestHeader("Content-Type", "application/json");
     req.setRequestHeader("X-Master-Key", config.XMasterKey);
-    req.send('{"sample": "Hello World"}');
+    todoList.push(todoObj);
+    req.send(JSON.stringify(todoList));//fix this
 }
 
 let req = new XMLHttpRequest();
@@ -94,6 +94,7 @@ setInterval(updateTodoList, 1000);
 
 let deleteTodo = function(index) {
     todoList.splice(index,1);
+    updateJSONbin();
 }
 
 let addTodo = function() {
@@ -113,9 +114,10 @@ let addTodo = function() {
           description: newDescription,
           place: newPlace,
           category: '',
-          dueDate: newDate
+          dueDate: newDate.toUTCString()
       };
+      
     //add item to the list
-      todoList.push(newTodo);
+      updateJSONbin(newTodo);
       window.localStorage.setItem("todos", JSON.stringify(todoList));
   }
