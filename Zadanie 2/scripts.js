@@ -16,6 +16,8 @@ let loadTodoList = function() {
     req.send();
 };
 
+
+
 // Wyślij zaktualizowaną listę `todoList` na serwer
 let updateJSONbin = function() {
     let req = new XMLHttpRequest();
@@ -43,6 +45,7 @@ let updateTodoList = function() {
   // Utwórz nową tabelę z nagłówkami
   let tab = document.createElement("TABLE");
   tab.setAttribute("id", "myTable");
+  tab.className = "table table-bordered";
 
   // Utwórz wiersz nagłówkowy
   let headerRow = document.createElement("TR");
@@ -55,48 +58,54 @@ let updateTodoList = function() {
 
   // Wypełnij tabelę danymi z `todoList`
   let filterInput = document.getElementById("inputSearch");
-  todoList.forEach((todo, index) => {
-      if (
-          filterInput.value == "" ||
-          todo.title.includes(filterInput.value) ||
-          todo.description.includes(filterInput.value)
-      ) {
-          let newRow = document.createElement("TR");
+  let filterInputFrom = document.getElementById("inputSearchFrom");
+  let filterInputTo = document.getElementById("inputSearchTo");
+    function checkDateFrom(todoItem) {
+        if(filterInputFrom.value == 0 && filterInputTo.value == 0) return 0 <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= 8640000000000000;
+        if(filterInputFrom.value == 0) return 0 <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= Date.parse(filterInputTo.value);
+        if(filterInputTo.value == 0) return Date.parse(filterInputFrom.value) <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= 8640000000000000;
+        return Date.parse(filterInputFrom.value) <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= Date.parse(filterInputTo.value);
+    }
+  let timeFilterResult = todoList.filter(checkDateFrom);
+  timeFilterResult.forEach((todo, index) => {
+      if (filterInput.value == "" || todo.title.toLowerCase().includes(filterInput.value.toLowerCase()) || todo.description.toLowerCase().includes(filterInput.value.toLowerCase())) {
+            let newRow = document.createElement("TR");
 
-          // Dodaj komórkę dla tytułu
-          let titleCell = document.createElement("TD");
-          titleCell.textContent = todo.title;
-          newRow.appendChild(titleCell);
+            // Dodaj komórkę dla tytułu
+            let titleCell = document.createElement("TD");
+            titleCell.textContent = todo.title;
+            newRow.appendChild(titleCell);
 
-          // Dodaj komórkę dla opisu
-          let descCell = document.createElement("TD");
-          descCell.textContent = todo.description;
-          newRow.appendChild(descCell);
+            // Dodaj komórkę dla opisu
+            let descCell = document.createElement("TD");
+            descCell.textContent = todo.description;
+            newRow.appendChild(descCell);
 
-          // Dodaj komórkę dla miejsca
-          let placeCell = document.createElement("TD");
-          placeCell.textContent = todo.place;
-          newRow.appendChild(placeCell);
+            // Dodaj komórkę dla miejsca
+            let placeCell = document.createElement("TD");
+            placeCell.textContent = todo.place;
+            newRow.appendChild(placeCell);
 
-          // Dodaj komórkę dla terminu
-          let dueDateCell = document.createElement("TD");
-          dueDateCell.textContent = todo.dueDate;
-          newRow.appendChild(dueDateCell);
+            // Dodaj komórkę dla terminu
+            let dueDateCell = document.createElement("TD");
+            dueDateCell.textContent = todo.dueDate;
+            newRow.appendChild(dueDateCell);
 
-          // Dodaj komórkę dla akcji (przycisk usuwania)
-          let actionCell = document.createElement("TD");
-          let deleteButton = document.createElement("input");
-          deleteButton.type = "button";
-          deleteButton.value = "Usuń";
-          deleteButton.addEventListener("click", () => deleteTodo(index));
+            // Dodaj komórkę dla akcji (przycisk usuwania)
+            let actionCell = document.createElement("TD");
+            let deleteButton = document.createElement("input");
+            deleteButton.type = "button";
+            deleteButton.value = "Delete";
+            deleteButton.className = "btn btn-xs btn-danger";
+            deleteButton.addEventListener("click", () => deleteTodo(index));
 
-          actionCell.appendChild(deleteButton);
-          newRow.appendChild(actionCell);
+            actionCell.appendChild(deleteButton);
+            newRow.appendChild(actionCell);
 
-          // Dodaj wiersz do tabeli
-          tab.appendChild(newRow);
-      }
-  });
+            // Dodaj wiersz do tabeli
+            tab.appendChild(newRow);
+        }
+    });
 
   // Dodaj tabelę do kontenera `todoListView`
   todoListDiv.appendChild(tab);
@@ -124,7 +133,7 @@ let addTodo = function() {
         category: '',
         dueDate: new Date(inputDate.value).toUTCString()
     };
-
+    
     todoList.push(newTodo);
     updateJSONbin();
     window.localStorage.setItem("todos", JSON.stringify(todoList));
