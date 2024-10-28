@@ -1,123 +1,134 @@
 "use strict"
-let todoList = []; //declares a new array for Your todo list
+let todoList = [];
 
-// let initList = function() {
-//     let savedList = window.localStorage.getItem("todos");
-//     if (savedList != null)
-//         todoList = JSON.parse(savedList);
-//     else
-// //code creating a default list with 2 items
-//     todoList.push(
-//     {
-//         title: "Learn JS",
-//         description: "Create a demo application for my TODO's",
-//         place: "445",
-//         category: '',
-//         dueDate: new Date(2024,10,16)
-//     },
-//     {
-//         title: "Lecture test",
-//         description: "Quick test from the first three lectures",
-//         place: "F6",
-//         category: '',
-//         dueDate: new Date(2024,10,17)
-//     }
-//         // of course the lecture test mentioned above will not take place
-//     );
-// }
-
-let updateJSONbin = function(todoObj) {
+// Załaduj listę `todoList` z serwera
+let loadTodoList = function() {
     let req = new XMLHttpRequest();
     req.onreadystatechange = () => {
-    if (req.readyState == XMLHttpRequest.DONE) {
-        todoList.push(req.responseText);
-    }
+        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
+            // Parse JSON response and assign to `todoList`
+            todoList = JSON.parse(req.responseText).record || [];
+            updateTodoList();
+        }
     };
-    console.log(todoObj);
+    req.open("GET", `https://api.jsonbin.io/v3/b/${config.BINID}/latest`, true);
+    req.setRequestHeader("X-Master-Key", config.XMasterKey);
+    req.send();
+};
+
+// Wyślij zaktualizowaną listę `todoList` na serwer
+let updateJSONbin = function() {
+    let req = new XMLHttpRequest();
+    req.onreadystatechange = () => {
+        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
+            console.log("List updated in JSONbin");
+        }
+    };
     req.open("PUT", `https://api.jsonbin.io/v3/b/${config.BINID}`, true);
     req.setRequestHeader("Content-Type", "application/json");
     req.setRequestHeader("X-Master-Key", config.XMasterKey);
-    todoList.push(todoObj);
-    req.send(JSON.stringify(todoList));//fix this
-}
-
-let req = new XMLHttpRequest();
-
-req.onreadystatechange = () => {
-    if (req.readyState == XMLHttpRequest.DONE) {
-        todoList.push(req.responseText);
-        //console.log(req.responseText);
-    }
+    req.send(JSON.stringify(todoList));
 };
 
-req.open("GET", `https://api.jsonbin.io/v3/b/${config.BINID}/latest`, true);
-req.setRequestHeader("X-Master-Key", config.XMasterKey);
-req.send();
-
-//initList();
-
+// Aktualizuj widok listy z `todoList`
 let updateTodoList = function() {
-    let todoListDiv =
-    document.getElementById("todoListView");
+  let todoListDiv = document.getElementById("todoListView");
 
-    //remove all elements
-    while (todoListDiv.firstChild) {
-        todoListDiv.removeChild(todoListDiv.firstChild);
-    }
-
-//add all elements
-let filterInput = document.getElementById("inputSearch");   
-for (let todo in todoList) {
-  if (
-    (filterInput.value == "") ||
-    (todoList[todo].title.includes(filterInput.value)) ||
-    (todoList[todo].description.includes(filterInput.value))
-  ) {
-    let newElement = document.createElement("p");
-    let newContent = document.createTextNode(todoList[todo].title + " " +
-                                             todoList[todo].description);
-    newElement.appendChild(newContent);
-    todoListDiv.appendChild(newElement);
+  // Usuń istniejącą tabelę, jeśli istnieje
+  let existingTable = document.getElementById("myTable");
+  if (existingTable) {
+      existingTable.remove();
   }
-}
 
-    let newDeleteButton = document.createElement("input");
-        newDeleteButton.type = "button";
-        newDeleteButton.value = "x";
-        newDeleteButton.addEventListener("click",
-            function() {
-                deleteTodo(todo);
-            });
-}
+  // Utwórz nową tabelę z nagłówkami
+  let tab = document.createElement("TABLE");
+  tab.setAttribute("id", "myTable");
+
+  // Utwórz wiersz nagłówkowy
+  let headerRow = document.createElement("TR");
+  ["Title", "Description", "Place", "Due Date", "Actions"].forEach(headerText => {
+      let headerCell = document.createElement("TH");
+      headerCell.textContent = headerText;
+      headerRow.appendChild(headerCell);
+  });
+  tab.appendChild(headerRow);
+
+  // Wypełnij tabelę danymi z `todoList`
+  let filterInput = document.getElementById("inputSearch");
+  todoList.forEach((todo, index) => {
+      if (
+          filterInput.value == "" ||
+          todo.title.includes(filterInput.value) ||
+          todo.description.includes(filterInput.value)
+      ) {
+          let newRow = document.createElement("TR");
+
+          // Dodaj komórkę dla tytułu
+          let titleCell = document.createElement("TD");
+          titleCell.textContent = todo.title;
+          newRow.appendChild(titleCell);
+
+          // Dodaj komórkę dla opisu
+          let descCell = document.createElement("TD");
+          descCell.textContent = todo.description;
+          newRow.appendChild(descCell);
+
+          // Dodaj komórkę dla miejsca
+          let placeCell = document.createElement("TD");
+          placeCell.textContent = todo.place;
+          newRow.appendChild(placeCell);
+
+          // Dodaj komórkę dla terminu
+          let dueDateCell = document.createElement("TD");
+          dueDateCell.textContent = todo.dueDate;
+          newRow.appendChild(dueDateCell);
+
+          // Dodaj komórkę dla akcji (przycisk usuwania)
+          let actionCell = document.createElement("TD");
+          let deleteButton = document.createElement("input");
+          deleteButton.type = "button";
+          deleteButton.value = "Usuń";
+          deleteButton.addEventListener("click", () => deleteTodo(index));
+
+          actionCell.appendChild(deleteButton);
+          newRow.appendChild(actionCell);
+
+          // Dodaj wiersz do tabeli
+          tab.appendChild(newRow);
+      }
+  });
+
+  // Dodaj tabelę do kontenera `todoListView`
+  todoListDiv.appendChild(tab);
+};
+
+
 
 setInterval(updateTodoList, 1000);
 
 let deleteTodo = function(index) {
-    todoList.splice(index,1);
+    todoList.splice(index, 1);
     updateJSONbin();
-}
+};
 
 let addTodo = function() {
-    //get the elements in the form
-      let inputTitle = document.getElementById("inputTitle");
-      let inputDescription = document.getElementById("inputDescription");
-      let inputPlace = document.getElementById("inputPlace");
-      let inputDate = document.getElementById("inputDate");
-    //get the values from the form
-      let newTitle = inputTitle.value;
-      let newDescription = inputDescription.value;
-      let newPlace = inputPlace.value;
-      let newDate = new Date(inputDate.value);
-    //create new item
-      let newTodo = {
-          title: newTitle,
-          description: newDescription,
-          place: newPlace,
-          category: '',
-          dueDate: newDate.toUTCString()
-      };
-      
-    //add item to the list
-      updateJSONbin(newTodo);
-      window.localStorage.setItem("todos", JSON.stringify(todoList));
-  }
+    let inputTitle = document.getElementById("inputTitle");
+    let inputDescription = document.getElementById("inputDescription");
+    let inputPlace = document.getElementById("inputPlace");
+    let inputDate = document.getElementById("inputDate");
+
+    let newTodo = {
+        title: inputTitle.value,
+        description: inputDescription.value,
+        place: inputPlace.value,
+        category: '',
+        dueDate: new Date(inputDate.value).toUTCString()
+    };
+
+    todoList.push(newTodo);
+    updateJSONbin();
+    window.localStorage.setItem("todos", JSON.stringify(todoList));
+};
+
+// Załaduj listę przy starcie aplikacji
+loadTodoList();
