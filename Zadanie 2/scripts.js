@@ -1,6 +1,24 @@
 "use strict"
 let todoList = [];
 
+
+let categorizeTask = function(title, description) {
+    let req = new XMLHttpRequest();
+    let prompt = `Based on the title and description of a task, categorize it as one of the following categories: "university", "private", "work", "shopping". Task title: ${title}. Task description: ${description}. Return only the category name.`;
+    
+    req.onreadystatechange = () => {
+        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
+            let response = JSON.parse(req.responseText);
+            return response.result;
+        }
+    };
+    
+    req.open("POST", "https://api.groq.com/v1/llama3-8b-8192", true); // Zmień na właściwy endpoint Groq
+    req.setRequestHeader("Authorization", `Bearer ${config.GROQ_API_KEY}`);
+    req.setRequestHeader("Content-Type", "application/json");
+    req.send(JSON.stringify({ prompt: prompt }));
+};
+
 // Załaduj listę `todoList` z serwera
 let loadTodoList = function() {
     let req = new XMLHttpRequest();
@@ -126,11 +144,13 @@ let addTodo = function() {
     let inputPlace = document.getElementById("inputPlace");
     let inputDate = document.getElementById("inputDate");
 
+    let a = categorizeTask(inputTitle.value, inputDescription.value);
+    console.log(a);
     let newTodo = {
         title: inputTitle.value,
         description: inputDescription.value,
         place: inputPlace.value,
-        category: '',
+        category: a,
         dueDate: new Date(inputDate.value).toUTCString()
     };
     
