@@ -1,23 +1,30 @@
 "use strict"
+const Groq = require('groq-sdk');
 let todoList = [];
 
 
-let categorizeTask = function(title, description) {
-    let req = new XMLHttpRequest();
-    let prompt = `Based on the title and description of a task, categorize it as one of the following categories: "university", "private", "work", "shopping". Task title: ${title}. Task description: ${description}. Return only the category name.`;
-    
-    req.onreadystatechange = () => {
-        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
-            let response = JSON.parse(req.responseText);
-            return response.result;
-        }
-    };
-    
-    req.open("POST", "https://api.groq.com/v1/llama3-8b-8192", true); // Zmień na właściwy endpoint Groq
-    req.setRequestHeader("Authorization", `Bearer ${config.GROQ_API_KEY}`);
-    req.setRequestHeader("Content-Type", "application/json");
-    req.send(JSON.stringify({ prompt: prompt }));
-};
+
+const groq = new Groq();
+async function categorizeTask(title, description) {
+  const chatCompletion = await groq.chat.completions.create({
+    "messages": [
+      {
+        "role": "system",
+        "content": `Based on the title and description of a task, categorize it as one of the following categories: \"university\", \"private\", \"work\", \"shopping\". Task title: ${title}. Task description: ${description}. Return only the category name.`
+      }
+    ],
+    "model": "llama3-8b-8192",
+    "temperature": 1,
+    "max_tokens": 1024,
+    "top_p": 1,
+    "stream": true,
+    "stop": null
+  });
+
+  for await (const chunk of chatCompletion) {
+    process.stdout.write(chunk.choices[0]?.delta?.content || '');
+  }
+}
 
 // Załaduj listę `todoList` z serwera
 let loadTodoList = function() {
