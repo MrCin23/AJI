@@ -1,60 +1,63 @@
 "use strict"
 let todoList = [];
-//import Groq from 'groq-sdk';
+import Groq from 'groq-sdk';
 
 
 
-// const groq = new Groq();
-// async function categorizeTask(title, description) {
-//   const chatCompletion = await groq.chat.completions.create({
-//     "messages": [
-//       {
-//         "role": "system",
-//         "content": `Based on the title and description of a task, categorize it as one of the following categories: \"university\", \"private\", \"work\", \"shopping\". Task title: ${title}. Task description: ${description}. Return only the category name.`
-//       }
-//     ],
-//     "model": "llama3-8b-8192",
-//     "temperature": 1,
-//     "max_tokens": 1024,
-//     "top_p": 1,
-//     "stream": true,
-//     "stop": null
-//   });
+const groq = new Groq({
+    dangerouslyAllowBrowser: true,
+    apiKey: config.GROQAPI
+});
+async function categorizeTask(title, description) {
+  const chatCompletion = await groq.chat.completions.create({
+    "messages": [
+      {
+        "role": "system",
+        "content": `Based on the title and description of a task, categorize it as one of the following categories: \"university\", \"private\", \"work\". Task title: ${title}. Task description: ${description}. Return only the category name.`
+      }
+    ],
+    "model": "llama3-8b-8192",
+    "temperature": 1,
+    "max_tokens": 1024,
+    "top_p": 1,
+    "stream": true,
+    "stop": null
+  });
 
-//   for await (const chunk of chatCompletion) {
-//     process.stdout.write(chunk.choices[0]?.delta?.content || '');
-//   }
-// }
-let categorizeTask = function(title, description, callback) {
-    let req = new XMLHttpRequest();
-    let prompt = `Based on the title and description of a task, categorize it as one of the following categories: "university", "private", "work", "shopping". Task title: ${title}. Task description: ${description}. Return only the category name.`;
-    
-    req.onreadystatechange = () => {
-        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
-            let response = JSON.parse(req.responseText);
-            callback(response.result);
-        }
-    };
-    
-    req.open("POST", "https://api.groq.com/google/v1/chat/completions", true); 
-    req.setRequestHeader("Content-Type", "application/json");
-    req.setRequestHeader("Authorization", `Bearer ${config.GROQ_API_KEY}`);
-    req.send({
-         "messages": [
-           {
-             "role": "user",
-             "content": ""
-           }
-         ],
-         "model": "llama3-8b-8192",
-         "temperature": 1,
-         "max_tokens": 1024,
-         "top_p": 1,
-         "stream": true,
-         "stop": null
-       });
-    req.send(JSON.stringify({ prompt: prompt }));
-};
+  for await (const chunk of chatCompletion) {
+    process.stdout.write(chunk.choices[0]?.delta?.content || '');
+  }
+}
+// let categorizeTask = function(title, description, callback) {
+//     let req = new XMLHttpRequest();
+//     let prompt = `Based on the title and description of a task, categorize it as one of the following categories: "university", "private", "work", "shopping". Task title: ${title}. Task description: ${description}. Return only the category name.`;
+//
+//     req.onreadystatechange = () => {
+//         if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
+//             let response = JSON.parse(req.responseText);
+//             callback(response.result);
+//         }
+//     };
+//
+//     req.open("POST", "https://api.groq.com/google/v1/chat/completions", true);
+//     req.setRequestHeader("Content-Type", "application/json");
+//     req.setRequestHeader("Authorization", `Bearer ${config.GROQ_API_KEY}`);
+//     req.send({
+//          "messages": [
+//            {
+//              "role": "user",
+//              "content": ""
+//            }
+//          ],
+//          "model": "llama3-8b-8192",
+//          "temperature": 1,
+//          "max_tokens": 1024,
+//          "top_p": 1,
+//          "stream": true,
+//          "stop": null
+//        });
+//     req.send(JSON.stringify({ prompt: prompt }));
+// };
 
 
 
@@ -62,7 +65,7 @@ let categorizeTask = function(title, description, callback) {
 let loadTodoList = function() {
     let req = new XMLHttpRequest();
     req.onreadystatechange = () => {
-        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
+        if (req.readyState === XMLHttpRequest.DONE && req.status === 200) {
             // Parse JSON response and assign to `todoList`
             todoList = JSON.parse(req.responseText).record || [];
             updateTodoList();
@@ -79,7 +82,7 @@ let loadTodoList = function() {
 let updateJSONbin = function() {
     let req = new XMLHttpRequest();
     req.onreadystatechange = () => {
-        if (req.readyState == XMLHttpRequest.DONE && req.status == 200) {
+        if (req.readyState === XMLHttpRequest.DONE && req.status === 200) {
             console.log("List updated in JSONbin");
         }
     };
@@ -118,14 +121,14 @@ let updateTodoList = function() {
   let filterInputFrom = document.getElementById("inputSearchFrom");
   let filterInputTo = document.getElementById("inputSearchTo");
     function checkDateFrom(todoItem) {
-        if(filterInputFrom.value == 0 && filterInputTo.value == 0) return 0 <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= 8640000000000000;
-        if(filterInputFrom.value == 0) return 0 <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= Date.parse(filterInputTo.value);
-        if(filterInputTo.value == 0) return Date.parse(filterInputFrom.value) <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= 8640000000000000;
+        if(filterInputFrom.value === 0 && filterInputTo.value === 0) return 0 <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= 8640000000000000;
+        if(filterInputFrom.value === 0) return 0 <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= Date.parse(filterInputTo.value);
+        if(filterInputTo.value === 0) return Date.parse(filterInputFrom.value) <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= 8640000000000000;
         return Date.parse(filterInputFrom.value) <= Date.parse(todoItem.dueDate) && Date.parse(todoItem.dueDate) <= Date.parse(filterInputTo.value);
     }
   let timeFilterResult = todoList.filter(checkDateFrom);
   timeFilterResult.forEach((todo, index) => {
-      if (filterInput.value == "" || todo.title.toLowerCase().includes(filterInput.value.toLowerCase()) || todo.description.toLowerCase().includes(filterInput.value.toLowerCase())) {
+      if (filterInput.value === "" || todo.title.toLowerCase().includes(filterInput.value.toLowerCase()) || todo.description.toLowerCase().includes(filterInput.value.toLowerCase())) {
             let newRow = document.createElement("TR");
 
             // Dodaj komórkę dla tytułu
@@ -177,25 +180,25 @@ let deleteTodo = function(index) {
     updateJSONbin();
 };
 
-let addTodo = function() {
+let addTodo = async function () {
     let inputTitle = document.getElementById("inputTitle");
     let inputDescription = document.getElementById("inputDescription");
     let inputPlace = document.getElementById("inputPlace");
     let inputDate = document.getElementById("inputDate");
 
-    categorizeTask(inputTitle.value, inputDescription.value, function(category) {
-        let newTodo = {
-            title: inputTitle.value,
-            description: inputDescription.value,
-            place: inputPlace.value,
-            category: category,
-            dueDate: new Date(inputDate.value).toUTCString()
-        };
-        
-        todoList.push(newTodo);
-        updateJSONbin();
-        window.localStorage.setItem("todos", JSON.stringify(todoList));
-    });
+    let category = await categorizeTask(inputTitle.value, inputDescription.value);
+    console.log(category);
+    let newTodo = {
+        title: inputTitle.value,
+        description: inputDescription.value,
+        place: inputPlace.value,
+        category: category,
+        dueDate: new Date(inputDate.value).toUTCString()
+    };
+
+    todoList.push(newTodo);
+    updateJSONbin();
+    window.localStorage.setItem("todos", JSON.stringify(todoList));
 };
 
 // Załaduj listę przy starcie aplikacji
