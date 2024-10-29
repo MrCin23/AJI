@@ -32,7 +32,7 @@ async function categorizeTask(title, description) {
 }
 
 
-// Załaduj listę `todoList` z serwera
+
 let loadTodoList = function() {
     let req = new XMLHttpRequest();
     req.onreadystatechange = () => {
@@ -49,7 +49,7 @@ let loadTodoList = function() {
 
 
 
-// Wyślij zaktualizowaną listę `todoList` na serwer
+
 let updateJSONbin = function() {
     let req = new XMLHttpRequest();
     req.onreadystatechange = () => {
@@ -63,22 +63,22 @@ let updateJSONbin = function() {
     req.send(JSON.stringify(todoList));
 };
 
-// Aktualizuj widok listy z `todoList`
+
 let updateTodoList = function() {
     let todoListDiv = document.getElementById("todoListView");
 
-    // Usuń istniejącą tabelę, jeśli istnieje
+
     let existingTable = document.getElementById("myTable");
     if (existingTable) {
         existingTable.remove();
     }
 
-    // Utwórz nową tabelę z nagłówkami
+
     let tab = document.createElement("TABLE");
     tab.setAttribute("id", "myTable");
     tab.className = "table table-bordered";
 
-    // Utwórz wiersz nagłówkowy
+
     let headerRow = document.createElement("TR");
     ["Title", "Description", "Place", "Category", "Due Date", "Actions"].forEach(headerText => {
         let headerCell = document.createElement("TH");
@@ -87,7 +87,7 @@ let updateTodoList = function() {
     });
     tab.appendChild(headerRow);
 
-    // Wypełnij tabelę danymi z `todoList`
+
     let filterInput = document.getElementById("inputSearch");
     let filterInputFrom = document.getElementById("inputSearchFrom");
     let filterInputTo = document.getElementById("inputSearchTo");
@@ -102,32 +102,32 @@ let updateTodoList = function() {
         if (filterInput.value == "" || todo.title.toLowerCase().includes(filterInput.value.toLowerCase()) || todo.description.toLowerCase().includes(filterInput.value.toLowerCase())) {
             let newRow = document.createElement("TR");
 
-            // Dodaj komórkę dla tytułu
+
             let titleCell = document.createElement("TD");
             titleCell.textContent = todo.title;
             newRow.appendChild(titleCell);
 
-            // Dodaj komórkę dla opisu
+
             let descCell = document.createElement("TD");
             descCell.textContent = todo.description;
             newRow.appendChild(descCell);
 
-            // Dodaj komórkę dla miejsca
+
             let placeCell = document.createElement("TD");
             placeCell.textContent = todo.place;
             newRow.appendChild(placeCell);
 
-            // Dodaj komórkę dla miejsca
+
             let cateCell = document.createElement("TD");
             cateCell.textContent = todo.category;
             newRow.appendChild(cateCell);
 
-            // Dodaj komórkę dla terminu
+
             let dueDateCell = document.createElement("TD");
             dueDateCell.textContent = todo.dueDate;
             newRow.appendChild(dueDateCell);
 
-            // Dodaj komórkę dla akcji (przycisk usuwania)
+
             let actionCell = document.createElement("TD");
             let deleteButton = document.createElement("input");
             deleteButton.type = "button";
@@ -138,12 +138,12 @@ let updateTodoList = function() {
             actionCell.appendChild(deleteButton);
             newRow.appendChild(actionCell);
 
-            // Dodaj wiersz do tabeli
+
             tab.appendChild(newRow);
         }
     });
 
-    // Dodaj tabelę do kontenera `todoListView`
+
     todoListDiv.appendChild(tab);
 };
 
@@ -182,5 +182,4 @@ window.addTodo = async function () {
     }
 };
 
-// Załaduj listę przy starcie aplikacji
 loadTodoList();
