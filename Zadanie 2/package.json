@@ -1,17 +1,19 @@
 {
-  "name": "zadanie-2",
+  "name": "Zadanie2",
   "version": "1.0.0",
   "description": "",
-  "main": "config.js",
+  "main": "scripts.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MrCin23/AJI.git"
+    "build": "webpack"
   },
   "private": true,
   "dependencies": {
     "groq-sdk": "^0.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.8",
+    "@babel/preset-env": "^7.25.8",
+    "babel-loader": "^9.2.1",
+    "webpack-cli": "^5.1.4"
   }
 }
