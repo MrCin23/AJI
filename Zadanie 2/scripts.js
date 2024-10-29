@@ -203,3 +203,27 @@ let addTodo = async function () {
 
 // Załaduj listę przy starcie aplikacji
 loadTodoList();
+
+
+import Groq from "groq-sdk";
+
+const groq = new Groq({
+    dangerouslyAllowBrowser: true,
+    apiKey: config.GROQ_API_KEY
+});
+
+export async function fetchCategoryFromGroq(todoTitle, todoDescription) {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: `Na podstawie tytułu zadania: '${todoTitle}' i opisu: '${todoDescription}', jaką kategorię byś przypisał? Wybierz między Prywatne a Uniwersytet i odpowiedz tylko jednym słowem: Prywatne albo Uniwersytet.`,
+        },
+      ],
+      model: "llama3-8b-8192",
+    });
+  
+    const categoryResponse = chatCompletion.choices[0]?.message?.content || "Brak kategorii";
+    return categoryResponse;
+  }
+
