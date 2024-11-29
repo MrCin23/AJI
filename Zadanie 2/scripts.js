@@ -124,7 +124,7 @@ let updateTodoList = function() {
 
 
             let dueDateCell = document.createElement("TD");
-            dueDateCell.textContent = todo.dueDate;
+            dueDateCell.textContent = new Date(todo.dueDate).toLocaleString();
             newRow.appendChild(dueDateCell);
 
 
