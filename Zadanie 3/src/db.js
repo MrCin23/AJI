@@ -1,8 +1,8 @@
 const { Sequelize } = require('sequelize');
 
 // Konfiguracja połączenia z PostgreSQL
-const sequelize = new Sequelize('your_database_name', 'your_username', 'your_password', {
-    host: 'localhost',
+const sequelize = new Sequelize('computer_shop', 'aji', 'aji', {
+    host: 'localhost:5432',
     dialect: 'postgres',
     logging: false, // Wyłącz logi SQL (opcjonalne)
 });
