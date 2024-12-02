@@ -1,46 +1,30 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // Połączenie z bazą danych
-const CategoryModel = require('./Category'); // Odwołanie do modelu kategorii
+const knex = require('../db');
 
-const ProductModel = sequelize.define('Product', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    description: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    unitPrice: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        validate: {
-            min: 0.01,
-        },
-    },
-    unitWeight: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        validate: {
-            min: 0.01,
-        },
-    },
-    categoryId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: CategoryModel,
-            key: 'id',
-        },
-    },
-});
+const productModel = {
+    tableName: 'product',
 
-//One to many
-ProductModel.belongsTo(CategoryModel, { foreignKey: 'categoryId' });
+    schema: (table) => {
+        table.increments('id').primary();
+        table.string('name').notNullable();
+        table.string('description').notNullable();
+        table.float('unitPrice').notNullable().checkPositive();
+        table.float('unitWeight').notNullable().checkPositive();
+        table
+            .integer('categoryId')
+            .unsigned()
+            .notNullable()
+            .references('id')
+            .inTable('categories')
+            .onDelete('CASCADE');
+    },
 
-module.exports = ProductModel;
+    async initialize() {
+        const exists = await knex.schema.hasTable(this.tableName);
+        if (!exists) {
+            await knex.schema.createTable(this.tableName, this.schema);
+            console.log(`Table ${this.tableName} created.`);
+        }
+    },
+};
+
+module.exports = productModel;
