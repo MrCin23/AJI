@@ -8,4 +8,7 @@ const db = require('knex')({
     },
 });
 
+const { Model } = require('objection');
+
+
 module.exports = db;

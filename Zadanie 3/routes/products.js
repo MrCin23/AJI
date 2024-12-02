@@ -25,13 +25,26 @@ router.get('/:id', async function (req, res, next) {
     }
 });
 
-router.post('/', function(req, res, next) {
-    res.set('Content-Type', 'application/json');
-    res.send(JSON.stringify({}))
+router.post('/', async function (req, res, next) {
+    try {
+        const val = await productRepo.create(req.body);
+        console.log(val);
+        res.json(val);
+    } catch (err) {
+        console.error('Error fetching products:', err);
+        res.status(500).send('An error occurred');
+    }
 })
 
-router.put('/:id', function(req, res, next) {
-    res.send("Here we will update the product with id");
+router.put('/:id', async function (req, res, next) {
+    try {
+        const val = await productRepo.update(req.params.id, req.body);
+        console.log(val);
+        res.json(val);
+    } catch (err) {
+        console.error('Error fetching products:', err);
+        res.status(500).send('An error occurred');
+    }
 })
 
 module.exports = router;

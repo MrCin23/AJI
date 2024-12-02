@@ -1,53 +1,39 @@
 const knex = require("../db");
-const uuidv4 = require("uuid/v4")
+const { Model } = require("objection");
+const Product = require("../model/Product");
+const Category = require("../model/Category");
+// const uuidv4 = require("uuid/v4")
+
+Model.knex(knex);
 
 class ProductRepository {
-    findAll() {
-        console.log('Starting query');
-        return knex('product').select('*').then(data => {
-            console.log('Query resolved:', data);
-            return data;
-        }).catch(err => {
-            console.error('Query error:', err);
-            throw err;
-        });
+
+    async findAll() {
+        return Product.query().withGraphFetched('category');
     }
-    findById(id) {
-        console.log('Starting query');
-        return knex('product').select('*').where({id:id}).then(data => {
-            console.log('Query resolved:', data);
-            return data;
-        }).catch(err => {
-            console.error('Query error:', err);
-            throw err;
-        });
+
+    async findById(id) {
+        return Product.query().findById(id).withGraphFetched('category');
     }
-    create(){
-        uuidv4()
-        //create object -> json -> query
-        console.log('Starting query');
-        return knex('product').select('*').where({id:id}).then(data => {
-            console.log('Query resolved:', data);
-            return data;
-        }).catch(err => {
-            console.error('Query error:', err);
-            throw err;
-        });
+
+    async create(data) {
+        return Product.query().insertAndFetch(data);
     }
-    update(field, value){
-        //query with update
-        // UPDATE Customers
-        // SET ContactName = 'Alfred Schmidt', City= 'Frankfurt'
-        // WHERE CustomerID = 1;
-        console.log('Starting query');
-        return knex('product').select('*').where({id:id}).then(data => {
-            console.log('Query resolved:', data);
-            return data;
-        }).catch(err => {
-            console.error('Query error:', err);
-            throw err;
-        });
+
+    async update(id, data) {
+        const product = await Product.query().findById(id);
+        if (!product) {
+            throw new Error(`Not found product with id: ${id}`);
+        }
+        return Product.query().patchAndFetchById(id, data);
     }
+
+
+    async findByCategory(categoryId) {
+        return Product.query().where('categoryId', categoryId).withGraphFetched('category');
+    }
+
+
 }
 
 module.exports = new ProductRepository();

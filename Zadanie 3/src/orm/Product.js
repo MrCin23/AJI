@@ -14,7 +14,7 @@ const productModel = {
             .unsigned()
             .notNullable()
             .references('id')
-            .inTable('categories')
+            .inTable('category')
             .onDelete('CASCADE');
     },
 

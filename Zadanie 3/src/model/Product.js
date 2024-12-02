@@ -1,45 +1,63 @@
-const Category = require('./Category');
+const { Model } = require('objection');
+const Category = require('./Category'); // Model Category
 
-class Product {
-    constructor(name, description, unitPrice, unitWeight, category) {
-        if (!name || typeof name !== "string") {
-            throw new Error("Invalid name: must be a non-empty string.");
-        }
-        if (typeof description !== "string") {
-            throw new Error("Invalid description: must be a string.");
-        }
-        if (typeof unitPrice !== "number" || unitPrice <= 0) {
-            throw new Error("Invalid unit price: must be a positive number.");
-        }
-        if (typeof unitWeight !== "number" || unitWeight <= 0) {
-            throw new Error("Invalid unit weight: must be a positive number.");
-        }
-        if (!(category instanceof Category)) {
-            throw new Error("Invalid category: must be an instance of Category.");
-        }
+class Product extends Model {
 
-        this.name = name;
-        this.description = description;
-        this.unitPrice = unitPrice;
-        this.unitWeight = unitWeight;
-        this.category = category;
+    static get tableName() {
+        return 'product';
     }
 
-    getDetails() {
+    static get jsonSchema() {
         return {
-            name: this.name,
-            description: this.description,
-            unitPrice: this.unitPrice,
-            unitWeight: this.unitWeight,
-            category: this.category.getName()
+            type: 'object',
+            required: ['name', 'description', 'unit_price', 'unit_weight', 'category_id'],
+            properties: {
+                id: { type: 'integer' },
+                name: { type: 'string', minLength: 1 },
+                description: { type: 'string', minLength: 1 },
+                unit_price: { type: 'number', minimum: 0.01 },
+                unit_weight: { type: 'number', minimum: 0.01 },
+                category_id: { type: 'integer' },
+            },
         };
     }
 
-    changeCategory(newCategory) {
-        if (!Category.isValidCategory(newCategory)) {
-            throw new Error(`Invalid category: ${newCategory} does not exist.`);
+
+    static get relationMappings() {
+        return {
+            category: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: Category,
+                join: {
+                    from: 'product.category_id',
+                    to: 'category.id',
+                },
+            },
+        };
+    }
+
+
+    async changeCategory(newCategoryId) {
+
+        const categoryExists = await Category.query().findById(newCategoryId);
+        if (!categoryExists) {
+            throw new Error(`Invalid category: Category with ID ${newCategoryId} does not exist.`);
         }
-        this.category = newCategory;
+
+
+        return this.$query().patchAndFetch({ categoryId: newCategoryId });
+    }
+
+
+    async getDetails() {
+        const category = await this.$relatedQuery('category');
+        return {
+            name: this.name,
+            description: this.description,
+            unit_price: this.unit_price,
+            unit_weight: this.unit_weight,
+            category: category.name,
+        };
     }
 }
 

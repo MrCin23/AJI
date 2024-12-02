@@ -1,40 +1,49 @@
-class OrderStatus {
+const { Model } = require('objection');
 
-    static STATUSES = {
-        UNAPPROVED: "UNAPPROVED",
-        APPROVED: "APPROVED",
-        CANCELLED: "CANCELLED",
-        COMPLETED: "COMPLETED"
-    };
-
-    constructor(status) {
-        if (!OrderStatus.isValidStatus(status)) {
-            throw new Error(`Invalid status: ${status}`);
-        }
-        this.status = status;
+class OrderStatus extends Model {
+    static get tableName() {
+        return 'order_status';
     }
 
+    static get STATUSES() {
+        return {
+            UNAPPROVED: "UNAPPROVED",
+            APPROVED: "APPROVED",
+            CANCELLED: "CANCELLED",
+            COMPLETED: "COMPLETED",
+        };
+    }
 
     static isValidStatus(status) {
-        return Object.keys(OrderStatus.STATUSES).includes(status);
+        return Object.values(OrderStatus.STATUSES).includes(status);
+    }
+
+    static get relationMappings() {
+        return {
+            orders: {
+                relation: Model.HasManyRelation,
+                modelClass: require('Order'),
+                join: {
+                    from: 'order_status.id',
+                    to: 'orders.status_id'
+                }
+            }
+        };
     }
 
 
-    getStatuses() {
-        return OrderStatus.STATUSES[this.status];
-    }
-
-
-    getStatus() {
-        return this.status;
-    }
-
-
-    setStatus(newStatus) {
-        if (!OrderStatus.isValidStatus(newStatus)) {
-            throw new Error(`Invalid status: ${newStatus}`);
-        }
-        this.status = newStatus;
+    static get jsonSchema() {
+        return {
+            type: 'object',
+            required: ['status'],
+            properties: {
+                id: { type: 'integer' },
+                status: {
+                    type: 'string',
+                    enum: Object.values(OrderStatus.STATUSES),
+                },
+            },
+        };
     }
 }
 
