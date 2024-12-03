@@ -20,11 +20,11 @@ async function generateSEO(product) {
         "messages": [
             {
                 "role": "system",
-                "content": `Na podstawie produktu: ${JSON.stringify(product)} wygeneruj stronę HTML przedstawiającą produkt zgodnie z wymaganiami SEO. Zwróć jedynie zawartość pliku HTML, bez komentarzy.`
+                "content": `Na podstawie produktu: ${JSON.stringify(product)} wygeneruj stronę HTML przedstawiającą produkt zgodnie z wymaganiami SEO. Zwróć jedynie zawartość pliku HTML, bez komentarzy. Jeżeli możliwe zawrzyj i użyj Bootstrap.css`
             }
         ],
         "model": "llama3-8b-8192",
-        "temperature": 0,
+        "temperature": 1,
         "max_tokens": 1024,
         "top_p": 1,
         "stream": true,

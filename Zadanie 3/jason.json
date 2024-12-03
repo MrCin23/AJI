@@ -1,0 +1,58 @@
+[
+  {
+    "name": "NVIDIA GeForce RTX 4090",
+    "description": "High-end graphics card by NVIDIA with exceptional performance",
+    "unit_price": 4500.00,
+    "unit_weight": 2.8,
+    "category_id": 2
+  },
+  {
+    "name": "AMD Ryzen 9 7950X",
+    "description": "Powerful 16-core processor from AMD for demanding workloads",
+    "unit_price": 900.00,
+    "unit_weight": 0.8,
+    "category_id": 1
+  },
+  {
+    "name": "Intel Core i9-13900K",
+    "description": "Top-tier 13th generation Intel CPU with hybrid architecture",
+    "unit_price": 980.00,
+    "unit_weight": 0.75,
+    "category_id": 1
+  },
+  {
+    "name": "Corsair Vengeance RGB Pro 32GB",
+    "description": "High-performance DDR4 RAM with RGB lighting",
+    "unit_price": 200.00,
+    "unit_weight": 0.3,
+    "category_id": 3
+  },
+  {
+    "name": "Samsung 980 Pro 1TB NVMe SSD",
+    "description": "Fast and reliable NVMe SSD with PCIe Gen4 technology",
+    "unit_price": 150.00,
+    "unit_weight": 0.02,
+    "category_id": 4
+  },
+  {
+    "name": "Cooler Master Hyper 212",
+    "description": "Affordable and efficient CPU air cooler for mainstream systems",
+    "unit_price": 50.00,
+    "unit_weight": 1.2,
+    "category_id": 5
+  },
+  {
+    "name": "ASUS ROG Strix Z790-E Gaming WiFi",
+    "description": "Feature-rich Z790 motherboard with WiFi and RGB",
+    "unit_price": 450.00,
+    "unit_weight": 2.1,
+    "category_id": 6
+  },
+  {
+    "name": "EVGA 850W Power Supply",
+    "description": "Reliable and efficient 80+ Gold certified power supply",
+    "unit_price": 120.00,
+    "unit_weight": 3.5,
+    "category_id": 7
+  }
+]

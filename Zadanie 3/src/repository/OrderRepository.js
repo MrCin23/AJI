@@ -19,7 +19,6 @@ class OrderRepository {
         for (const order of orders) {
             let items;
 
-
             if (Array.isArray(order.ordered_items)) {
                 items = order.ordered_items;
             } else if (typeof order.ordered_items === 'string') {
