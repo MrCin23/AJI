@@ -1,12 +1,3 @@
-// class Category {
-//     constructor(name) {
-//         this.name = name;
-//     }
-// }
-//
-// module.exports = Category;
-
-
 const { Model } = require('objection');
 
 class Category extends Model {

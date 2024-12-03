@@ -38,10 +38,20 @@ class Order extends Model {
                 id: { type: 'integer' },
                 username: { type: 'string', minLength: 1 },
                 email: { type: 'string', minLength: 1 },
-                phone_number: { type: 'string', minLength: 9, maxLength: 9 }, //Regex
+                phone_number: { type: 'string', minLength: 9, maxLength: 12, pattern: '^[\\+]?[0-9]{0,3}[\\W\\s\\.]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$'}, //Regex
                 status_id: { type: 'integer' },
                 approval_date: { type: 'string', format: 'date-time', nullable: true },
-                ordered_items: { type: 'array' },
+                ordered_items: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        required: ['product_id'],
+                        properties: {
+                            product_id: { type: 'integer' },
+                            quantity: { type: 'integer', minimum: 1 },
+                        },
+                    },
+                },
             },
         };
     }

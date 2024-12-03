@@ -59,6 +59,15 @@ class Product extends Model {
             category: category.name,
         };
     }
+
+    // async toString() {
+    //     const category = await this.$relatedQuery('category');
+    //     return `name: ${this.name},
+    //         description: ${this.description},
+    //         unit_price: ${this.unit_price},
+    //         unit_weight: ${this.unit_weight},
+    //         category: ${category.name}`
+    // }
 }
 
 module.exports = Product;

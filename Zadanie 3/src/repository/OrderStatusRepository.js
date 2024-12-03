@@ -2,7 +2,6 @@ const db = require('../db'); // Import konfiguracji bazy danych
 const { Model } = require('objection');
 const OrderStatus = require('../model/OrderStatus'); // Model OrderStatus
 
-
 Model.knex(db);
 
 class OrderStatusRepository {

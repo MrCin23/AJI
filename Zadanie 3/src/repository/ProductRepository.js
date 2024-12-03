@@ -2,7 +2,7 @@ const knex = require("../db");
 const { Model } = require("objection");
 const Product = require("../model/Product");
 const Category = require("../model/Category");
-// const uuidv4 = require("uuid/v4")
+
 
 Model.knex(knex);
 
@@ -25,7 +25,12 @@ class ProductRepository {
         if (!product) {
             throw new Error(`Not found product with id: ${id}`);
         }
-        return Product.query().patchAndFetchById(id, data);
+        if(!data.id) {
+            return Product.query().patchAndFetchById(id, data);
+        }
+        else {
+            throw new Error(`Cannot change ID of the product!`);
+        }
     }
 
 
