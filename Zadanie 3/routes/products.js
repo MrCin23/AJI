@@ -5,7 +5,6 @@ const { StatusCodes } = require('http-status-codes');
 const { val} = require("objection");
 var config = require('./config');
 
-
 async function setupGroq() {
     const { default: Groq } = await import('groq-sdk');
     return new Groq({

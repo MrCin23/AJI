@@ -17,6 +17,14 @@ class Order extends Model {
                     to: 'order_status.id',
                 },
             },
+            user: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: require("./User"),
+                join: {
+                    from: 'orders.username',
+                    to: 'users.login',
+                },
+            },
             // ordered_items: {
             //     relation: Model.HasManyRelation,
             //     modelClass: Product,
@@ -52,6 +60,14 @@ class Order extends Model {
                         },
                     },
                 },
+                opinion:{
+                    type: 'object',
+                    required: ['rating', 'description'],
+                    properties: {
+                        rating: { type: 'integer', minimum: 1, maximum: 5 },
+                        description: { type: 'string', minLength: 1 }
+                    }
+                }
             },
         };
     }

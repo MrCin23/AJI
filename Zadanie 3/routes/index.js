@@ -2,14 +2,35 @@ var express = require('express');
 const productRepo = require("../src/repository/ProductRepository");
 const {StatusCodes} = require("http-status-codes");
 const fs = require('fs');
+const jwt = require("jsonwebtoken");
+const {config} = require("./config");
 var router = express.Router();
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+
+  if (!token) {
+    return res.status(StatusCodes.FORBIDDEN).json({ message: 'Missing token' });
+  }
+
+  jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(StatusCodes.FORBIDDEN).json({ message: 'Token incorrect' });
+    }
+
+    req.user = decoded;
+    if(decoded.role != "EMPLOYEE") {
+      return res.status(StatusCodes.FORBIDDEN).json({ message: 'User is not authorized for this action' });
+    }
+    next();
+  });
+};
 
 /* GET home page. */
 router.get('/', function(req, res) {
   res.render('index', { title: 'Express' });
 });
 
-router.post('/init', async function (req, res) {
+router.post('/init', verifyToken, async function (req, res) {
   if(Object.keys(await productRepo.findAll()).length === 0) {
     try {
       var val = [];

@@ -1,9 +1,28 @@
 var express = require('express');
 const orderRepo = require('../src/repository/OrderRepository');
 const { StatusCodes } = require('http-status-codes');
+const jwt = require("jsonwebtoken");
+const {config} = require("./config");
 var router = express.Router();
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
 
+    if (!token) {
+        return res.status(StatusCodes.FORBIDDEN).json({ message: 'Missing token' });
+    }
 
+    jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(StatusCodes.FORBIDDEN).json({ message: 'Token incorrect' });
+        }
+
+        req.user = decoded;
+        if(decoded.role != "CLIENT") {
+            return res.status(StatusCodes.FORBIDDEN).json({ message: 'User is not authorized for this action' });
+        }
+        next();
+    });
+};
 
 router.get('/', async function (req, res, next) {
     try {
@@ -63,5 +82,20 @@ router.get('/user/:username', async function (req, res, next) {
         res.status(StatusCodes.NOT_FOUND).send(`Username ${req.params.username} not found: ${err}`);
     }
 })
+
+router.post('/:id/opinions', verifyToken, async function (req, res, next) {
+    try {
+        if ((await orderRepo.findById(req.params.id)).username == req.user.login){
+            const {id} = req.params;
+            const data = req.body;
+            const updatedOrder = await orderRepo.addOpinion(id, data);
+            res.status(StatusCodes.CREATED).json(updatedOrder);
+        } else {
+            res.status(StatusCodes.FORBIDDEN).json({error: `User is not allowed to do that! Order created by: ${(await orderRepo.findById(req.params.id)).username}`})
+        }
+    } catch (error) {
+        res.status(StatusCodes.BAD_REQUEST).json({error: error.message});
+    }
+});
 
 module.exports = router;

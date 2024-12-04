@@ -201,6 +201,24 @@ class OrderRepository {
             throw new Error("Cannot change status of CANCELLED order!")
         }
     }
+
+    async addOpinion(id, data) {
+        const order = await Order.query().findById(id);
+        if (!order) {
+            throw new Error(`Order with id: ${id} not found`);
+        }
+        const actualStatusId = (await this.findById(id)).order_status.id;
+        if (actualStatusId > 2) {
+            const { rating, description } = data.opinion;
+
+            return Order.query()
+                .patchAndFetchById(id, {
+                    opinion: {rating, description}
+                });
+        } else {
+            throw new Error("Cannot add opinion to APPROVED or UNAPPROVED orders. Only COMPLETED or CANCELLED allowed.")
+        }
+    }
 }
 
 module.exports = new OrderRepository();
