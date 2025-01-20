@@ -5,7 +5,7 @@ import { useUser } from '../contexts/UserContext';
 
 interface ProtectedRouteProps {
     children: ReactNode;
-    requiredRole?: 'KLIENT' | 'PRACOWNIK'; // You can adjust roles based on your needs
+    requiredRole?: 'CLIENT' | 'EMPLOYEE';
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {

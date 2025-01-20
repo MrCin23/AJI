@@ -2,13 +2,20 @@ import React, { useState, ChangeEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import axios from '../../api/Axios';
+import {AxiosError} from "axios";
 
 interface Product {
+    id: string;
     name: string;
     description: string;
-    price: number;
-    weight: number;
-    category: string | { $oid: string };
+    unit_price: number;
+    unit_weight: number;
+    category: Category;
+}
+
+interface Category {
+    id: string;
+    name: string;
 }
 
 const InitDB: React.FC = () => {
@@ -18,41 +25,25 @@ const InitDB: React.FC = () => {
 
     const validateJsonStructure = (jsonData: Product[]): string | null => {
         if (!Array.isArray(jsonData)) {
-            return 'Błąd: Plik JSON musi zawierać tablicę produktów.';
+            return 'Error reading jason';
         }
 
         for (let i = 0; i < jsonData.length; i++) {
             const product = jsonData[i];
 
             if (!product.name) {
-                return `Błąd: Produkt ${i + 1} - Brak lub nieprawidłowa nazwa.`;
+                return `Error: Produkt ${i + 1} missing or incorrect name.`;
             }
             if (!product.description) {
-                return `Błąd: Produkt ${i + 1} - Brak lub nieprawidłowy opis.`;
+                return `Error: Produkt ${i + 1} - Brak lub nieprawidłowy description.`;
             }
-            if (typeof product.price !== 'number' || product.price <= 0) {
-                return `Błąd: Produkt ${i + 1} - Brak lub nieprawidłowa cena.`;
+            if (product.unit_price <= 0 || product.unit_price >= 200000) {
+                return `Error: Produkt ${i + 1} missing or incorrect price.`;
             }
-            if (typeof product.weight !== 'number' || product.weight <= 0) {
-                return `Błąd: Produkt ${i + 1} - Brak lub nieprawidłowa waga.`;
-            }
-
-            const category = product.category;
-            if (!category || (typeof category !== 'string' && typeof category !== 'object')) {
-                return `Błąd: Produkt ${i + 1} - Brak lub nieprawidłowy identyfikator kategorii.`;
-            }
-
-            if (typeof category === 'object' && category.hasOwnProperty('$oid')) {
-                if (typeof category.$oid !== 'string') {
-                    return `Błąd: Produkt ${i + 1} - Nieprawidłowy format identyfikatora kategorii.`;
-                }
-            } else if (typeof category === 'string') {
-                if (category.trim().length === 0) {
-                    return `Błąd: Produkt ${i + 1} - Kategoria nie może być pustym ciągiem znaków.`;
-                }
+            if (product.unit_weight <= 0 || product.unit_weight >= 2137) {
+                return `Error: Produkt ${i + 1} missing or incorrect weight.`;
             }
         }
-
         return null;
     };
 
@@ -63,7 +54,7 @@ const InitDB: React.FC = () => {
 
             reader.onload = (e) => {
                 try {
-                    const jsonData: Product[] = JSON.parse(e.target.result as string);
+                    const jsonData: Product[] = JSON.parse(e.target?.result as string);
                     const validationError = validateJsonStructure(jsonData);
                     if (validationError) {
                         setError(validationError);
@@ -74,13 +65,13 @@ const InitDB: React.FC = () => {
                         setMessage('');
                     }
                 } catch (err) {
-                    setError('Błąd: Plik JSON jest nieprawidłowy.');
+                    setError(`Error: jason did not pass validation :( ${err}`);
                     setFile(null);
                 }
             };
             reader.readAsText(selectedFile);
         } else {
-            setError('Błąd: Można przesyłać tylko pliki JSON.');
+            setError('Error: only jason files!!');
             setFile(null);
         }
     };
@@ -90,7 +81,7 @@ const InitDB: React.FC = () => {
         setMessage('');
 
         if (!file) {
-            setError('Proszę wybrać plik JSON do przesłania.');
+            setError('Select jason file');
             return;
         }
 
@@ -101,16 +92,18 @@ const InitDB: React.FC = () => {
             await axios.post('/init', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setMessage("Inicjalizacja produktów przebiegła pomyślnie.");
+            setMessage("Product initialisation finished successfully");
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.detail) {
-                if (error.response.data.detail === 'Database already initialized with products.') {
-                    setError('Baza danych zawiera już produkty.');
+            if(error instanceof AxiosError) {
+                if (error.response && error.response.data && error.response.data.detail) {
+                    if (error.response.data.detail === 'Database contains items.') {
+                        setError('Database contains items, initialisation failed');
+                    } else {
+                        setError(error.response.data.detail);
+                    }
                 } else {
-                    setError(error.response.data.detail);
+                    setError('An error occurred while initialising data');
                 }
-            } else {
-                setError('Błąd podczas inicjalizacji bazy danych.');
             }
         }
     };

@@ -4,9 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 import axios from '../../api/Axios';
+import {AxiosError} from "axios";
 
 const Register: React.FC = () => {
-    const [username, setUsername] = useState<string>('');
+    const [login, setLogin] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
@@ -19,18 +20,22 @@ const Register: React.FC = () => {
         setSuccessMessage('');
 
         try {
-            await axios.post('/register', { username, password });
+            await axios.post('/users/register', { login, password, role:"CLIENT" });
             setSuccessMessage('Twoje konto zostało założone. Teraz możesz się na nie zalogować.');
-            // navigate("/"); // Można odkomentować, jeśli po rejestracji użytkownik ma być przenoszony na inną stronę
-        } catch (error: any) {
-            if (error.response && error.response.data && error.response.data.detail) {
-                if (error.response.data.detail === 'A user with this username already exists.') {
-                    setError('Użytkownik o takiej nazwie użytkownia już istnieje.');
+            navigate("/login");
+        } catch (error) {
+            if(error instanceof AxiosError){
+                if (error.response && error.response.data && error.response.data.detail) {
+                    if (error.response.data.detail === 'A user with this username already exists.') {
+                        setError('This username is already taken');
+                    } else {
+                        setError(error.response.data.detail);
+                    }
                 } else {
-                    setError(error.response.data.detail);
+                    setError('Registration failed. Try again.');
                 }
             } else {
-                setError('Rejestracja nie powiodła się. Spróbuj ponownie później');
+                throw new Error("unknown error")
             }
         }
     };
@@ -56,8 +61,8 @@ const Register: React.FC = () => {
                                 type="text"
                                 className={`form-control ${error ? 'is-invalid' : ''}`}
                                 placeholder="Nazwa użytkownika"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={login}
+                                onChange={(e) => setLogin(e.target.value)}
                                 required
                             />
                         </div>

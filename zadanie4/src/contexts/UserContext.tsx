@@ -4,9 +4,8 @@ import axios from '../api/Axios';
 
 interface User {
     id: number;
-    username: string;
-    email: string;
-    // Dodaj inne pola, jeśli istnieją w Twoim API
+    login: string;
+    role: "CLIENT" | "EMPLOYEE";
 }
 
 interface UserContextType {
@@ -28,8 +27,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         const token = Cookies.get('jwt');
         if (token) {
             try {
-                const response = await axios.get<User>('/auth/me', {
-                    headers: { Authorization: `Bearer ${token}` },
+                const response = await axios.get<User>('/users/auth/me', {
+                    headers: { authorization: `Bearer ${token}` },
                 });
                 setUser(response.data);
             } catch (error) {

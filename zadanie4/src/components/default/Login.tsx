@@ -2,16 +2,17 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-import axios from '../../api/Axios';
+import axios from '../../api/Axios.ts';
 import { useUser } from '../../contexts/UserContext';
+import {AxiosError} from "axios";
 
 interface Credentials {
-    username: string;
+    login: string;
     password: string;
 }
 
 const Login: React.FC = () => {
-    const [credentials, setCredentials] = useState<Credentials>({ username: '', password: '' });
+    const [credentials, setCredentials] = useState<Credentials>({ login: '', password: '' });
     const [error, setError] = useState<string | null>(null);
     const { user, login } = useUser();
     const navigate = useNavigate();
@@ -27,26 +28,29 @@ const Login: React.FC = () => {
         setError(null);
 
         try {
-            const response = await axios.post<{ token: string; refreshToken: string }>('/login', credentials);
-            const { token, refreshToken } = response.data;
+            const response = await axios.post<string>('/users/login', credentials);
 
-            Cookies.set('jwt', token, { expires: 1 / 24, secure: true });
-            Cookies.set('refreshToken', refreshToken, { expires: 7, secure: true });
+            Cookies.set('jwt', response.data, {expires: 1 / 24, secure: true});
+            Cookies.set('refreshToken', response.data, { expires: 7, secure: true });
 
-            const userResponse = await axios.get('/auth/me');
+            const userResponse = await axios.get('/users/auth/me');
             const user = userResponse.data;
             login(user);
 
             navigate("/");
-        } catch (error: any) {
-            if (error.response && error.response.data && error.response.data.detail) {
-                if (error.response.data.detail === 'The username or password is incorrect.') {
-                    setError('Nazwa użytkownika lub/i hasło są niepoprawne');
+        } catch (error) {
+            if(error instanceof AxiosError){
+                if (error.response && error.response.data && error.response.data.detail) {
+                    if (error.response.data.detail === 'The username or password is incorrect.') {
+                        setError('Nazwa użytkownika lub/i hasło są niepoprawne');
+                    } else {
+                        setError(error.response.data.detail);
+                    }
                 } else {
-                    setError(error.response.data.detail);
+                    setError('Logowanie nie powiodło się. Spróbuj ponownie później');
                 }
             } else {
-                setError('Logowanie nie powiodło się. Spróbuj ponownie później');
+                throw new Error("unknown error")
             }
         }
     };
@@ -69,8 +73,8 @@ const Login: React.FC = () => {
                                 type="text"
                                 className="form-control"
                                 placeholder="Nazwa użytkownika"
-                                value={credentials.username}
-                                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                                value={credentials.login}
+                                onChange={(e) => setCredentials({ ...credentials, login: e.target.value })}
                                 required
                             />
                         </div>

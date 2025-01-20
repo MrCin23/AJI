@@ -14,7 +14,7 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(StatusCodes.FORBIDDEN).json({ message: 'Token incorrect' });
+      return res.status(StatusCodes.FORBIDDEN).json({ message: `Token incorrect` });
     }
 
     req.user = decoded;
@@ -34,7 +34,7 @@ router.post('/init', verifyToken, async function (req, res) {
   if(Object.keys(await productRepo.findAll()).length === 0) {
     try {
       var val = [];
-      if(Object.keys(req.body).length === 0) {
+      if(req.body === undefined || Object.keys(req.body).length === 0) {
         let jsonData;
 
         fs.readFile('./jason.json', 'utf8', async (err, data) => {

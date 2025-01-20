@@ -3,68 +3,79 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentDots, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
 import axios from '../../api/Axios';
 
-interface OrderProduct {
-    product: {
-        name: string;
-    };
-    quantity: number;
-    price: number;
+interface Product {
+    id: string;
+    name: string;
+    description: string;
+    unit_price: number;
+    unit_weight: number;
+    category: Category;
+}
+
+interface Category {
+    id: string;
+    name: string;
+}
+
+interface Status {
+    name: "UNAPPROVED" | "APPROVED" | "CANCELLED" | "COMPLETED";
+}
+
+interface Opinion {
+    rating: number;
+    description: string;
 }
 
 interface Order {
-    _id: string;
-    confirmationDate: string;
-    status: string;
-    products: OrderProduct[];
-    opinion?: {
-        rating: number;
-        content: string;
-        createdAt: string;
-    };
+    id: string;
+    username: string
+    email: string
+    phone_number: number;
+    status: Status;
+    approval_date: string;
+    ordered_items: Product[];
+    opinion?: Opinion;
 }
 
 interface OpinionForm {
     rating: string;
-    content: string;
-    createdAt: string;
+    description: string;
 }
 
 const MyOrders: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [opinionForm, setOpinionForm] = useState<OpinionForm>({
         rating: '',
-        content: '',
-        createdAt: new Date().toISOString().split('T')[0],
+        description: '',
     });
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [error, setError] = useState<string>('');
 
     const fetchOrders = async () => {
         try {
-            const response = await axios.get('/orders/user/me');
+            const response = await axios.get('/api/orders/user/me');
             setOrders(response.data);
         } catch (error) {
-            console.error('Wystąpił błąd podczas pobierania zamówień:', error);
+            console.error('Error while fetching orders:', error);
         }
     };
 
     const addOpinion = async (orderId: string) => {
         setError('');
-        const { rating, content, createdAt } = opinionForm;
+        const { rating, description } = opinionForm;
 
         try {
-            await axios.post(`/orders/${orderId}/opinions`, {
+            await axios.post(`/api/orders/${orderId}/opinions`, {
                 rating,
-                content,
-                createdAt,
+                description
             });
 
             fetchOrders();
-            setOpinionForm({ rating: '', content: '', createdAt: new Date().toISOString().split('T')[0] });
+            setOpinionForm({ rating: '', description: ''});
             setSelectedOrderId(null);
         } catch (error) {
-            console.error('Wystąpił błąd podczas dodawania opinii:', error);
-            setError('Nie udało się dodać opinii. Sprawdź, czy zamówienie spełnia wymagania.');
+            console.error('Error while adding opinion:', error);
+            setError('Error while adding opinion');
         }
     };
 
@@ -88,53 +99,50 @@ const MyOrders: React.FC = () => {
                     </thead>
                     <tbody>
                     {orders.map((order) => {
-                        const isOpinionAllowed = ['ZREALIZOWANE', 'ANULOWANE'].includes(order.status);
+                        const isOpinionAllowed = ['COMPLETED', 'CANCELLED'].includes(order.status.name);
                         const opinionExists = !!order.opinion;
 
                         return (
-                            <tr key={order._id} className="align-middle">
+                            <tr key={order.id} className="align-middle">
                                 <td className="text-center">
-                                    {order.confirmationDate
-                                        ? new Date(order.confirmationDate).toLocaleString()
+                                    {order.approval_date
+                                        ? new Date(order.approval_date).toLocaleString()
                                         : 'Brak danych'}
                                 </td>
                                 <td className="text-center">
-                                    {order.products
-                                        .reduce((total, item) => total + item.price * item.quantity, 0)
+                                    {order.ordered_items
+                                        .reduce((total, item) => total + item.unit_price, 0)
                                         .toFixed(2)}{' '}
                                     PLN
                                 </td>
                                 <td>
                                     <ul>
-                                        {order.products.map((item, index) => (
+                                        {order.ordered_items.map((item, index) => (
                                             <li key={index}>
-                                                {item.product.name} (x{item.quantity})
+                                                {item.name}
                                             </li>
                                         ))}
                                     </ul>
                                 </td>
                                 <td className="text-center">
-                                    {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
+                                    {order.status.name.slice(1).toLowerCase()}
                                 </td>
                                 <td className="text-center">
                                     {opinionExists ? (
                                         <>
                                             <div className="mb-2">
-                                                <strong>Ocena:</strong> {order.opinion.rating} / 5
+                                                <strong>Ocena:</strong> {order.opinion?.rating} / 5
                                             </div>
                                             <div className="mb-2">
-                                                <strong>Treść:</strong> {order.opinion.content}
-                                            </div>
-                                            <div className="mb-2">
-                                                <strong>Data:</strong> {new Date(order.opinion.createdAt).toLocaleDateString()}
+                                                <strong>Treść:</strong> {order.opinion?.description}
                                             </div>
                                         </>
                                     ) : isOpinionAllowed ? (
-                                        selectedOrderId === order._id ? (
+                                        selectedOrderId === order.id ? (
                                             <form
                                                 onSubmit={(e) => {
                                                     e.preventDefault();
-                                                    addOpinion(order._id);
+                                                    addOpinion(order.id);
                                                 }}
                                             >
                                                 <div className="mb-2">
@@ -158,29 +166,15 @@ const MyOrders: React.FC = () => {
                                                         <textarea
                                                             placeholder="Treść opinii"
                                                             className="form-control"
-                                                            value={opinionForm.content}
+                                                            value={opinionForm.rating}
                                                             onChange={(e) =>
                                                                 setOpinionForm({
                                                                     ...opinionForm,
-                                                                    content: e.target.value,
+                                                                    description: e.target.value,
                                                                 })
                                                             }
                                                             required
                                                         />
-                                                </div>
-                                                <div className="mb-2">
-                                                    <input
-                                                        type="date"
-                                                        className="form-control"
-                                                        value={opinionForm.createdAt}
-                                                        onChange={(e) =>
-                                                            setOpinionForm({
-                                                                ...opinionForm,
-                                                                createdAt: e.target.value,
-                                                            })
-                                                        }
-                                                        required
-                                                    />
                                                 </div>
                                                 {error && <p className="text-danger">{error}</p>}
                                                 <button type="submit" className="btn btn-primary btn-sm">
@@ -198,7 +192,7 @@ const MyOrders: React.FC = () => {
                                         ) : (
                                             <button
                                                 className="btn btn-success btn-sm"
-                                                onClick={() => setSelectedOrderId(order._id)}
+                                                onClick={() => setSelectedOrderId(order.id)}
                                             >
                                                 <FontAwesomeIcon icon={faCommentDots} />
                                                 <span className="ms-2">Dodaj opinię</span>

@@ -3,30 +3,38 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faBan } from '@fortawesome/free-solid-svg-icons';
 import axios from '../../api/Axios';
 
-// Define types for the order, status, and opinion
 interface Product {
-    product: {
-        name: string;
-    };
-    quantity: number;
-    price: number;
+    id: string;
+    name: string;
+    description: string;
+    unit_price: number;
+    unit_weight: number;
+    category: Category;
+}
+
+interface Category {
+    id: string;
+    name: string;
+}
+
+interface Status {
+    name: "UNAPPROVED" | "APPROVED" | "CANCELLED" | "COMPLETED";
 }
 
 interface Opinion {
     rating: number;
-    content: string;
-    createdAt: string;
+    description: string;
 }
 
 interface Order {
-    _id: string;
-    confirmationDate: string;
-    products: Product[];
+    id: string;
+    username: string
+    email: string
+    phone_number: number;
+    status: Status;
+    approval_date: string;
+    ordered_items: Product[];
     opinion?: Opinion;
-}
-
-interface Status {
-    name: string;
 }
 
 const ListOrders: React.FC = () => {
@@ -36,11 +44,33 @@ const ListOrders: React.FC = () => {
 
     const fetchOrders = async (statusName: string) => {
         try {
-            const response = await axios.get(`/orders/status/${statusName}`);
+            let asdf;
+            switch (statusName) {
+                case "UNAPPROVED":{
+                    asdf = 1
+                    break;
+                }
+                case "APPROVED": {
+                    asdf = 2;
+                    break;
+                }
+                case "CANCELLED":{
+                    asdf = 3;
+                    break;
+                }
+                case "COMPLETED":{
+                    asdf = 4;
+                    break;
+                }
+                default: {
+                    throw new Error("unknown order status")
+                }
+            }
+            const response = await axios.get(`/orders/status/${asdf}`);
             setOrders(response.data);
             console.log(response.data);
         } catch (error) {
-            console.error('Wystąpił błąd podczas pobierania zamówień:', error);
+            console.error('Error while reading orders:', error);
         }
     };
 
@@ -49,14 +79,14 @@ const ListOrders: React.FC = () => {
             const response = await axios.get('/status');
             setStatuses(response.data);
         } catch (error) {
-            console.error('Wystąpił błąd podczas pobierania statusów:', error);
+            console.error('Error while reading order statuses:', error);
         }
     };
 
     const changeOrderStatus = async (orderId: string, newStatusName: string) => {
         try {
             await axios.patch(`/orders/${orderId}`, { status: newStatusName });
-            setOrders(orders.filter(order => order._id !== orderId));
+            setOrders(orders.filter(order => order.id !== orderId));
         } catch (error) {
             console.error('Error updating order status:', error);
         }
@@ -73,7 +103,7 @@ const ListOrders: React.FC = () => {
     }, [selectedStatus]);
 
     useEffect(() => {
-        const defaultStatus = statuses.find(status => status.name === 'ZATWIERDZONE');
+        const defaultStatus = statuses.find(status => status.name === 'APPROVED');
         if (defaultStatus) {
             setSelectedStatus(defaultStatus.name);
             fetchOrders(defaultStatus.name);
@@ -81,7 +111,7 @@ const ListOrders: React.FC = () => {
     }, [statuses]);
 
     const isCompletedOrCancelled = statuses.some(status => {
-        return (status.name === selectedStatus) && (status.name === 'ZREALIZOWANE' || status.name === 'ANULOWANE');
+        return (status.name === selectedStatus) && (status.name === 'COMPLETED' || status.name === 'CANCELLED');
     });
 
     return (
@@ -120,18 +150,18 @@ const ListOrders: React.FC = () => {
                     </thead>
                     <tbody>
                     {orders.map(order => (
-                        <tr key={order._id} className="align-middle">
+                        <tr key={order.id} className="align-middle">
                             <td className="text-center">
-                                {new Date(order.confirmationDate).toLocaleString()}
+                                {new Date(order.approval_date).toLocaleString()}
                             </td>
                             <td className="text-center">
-                                {order.products.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)} PLN
+                                {order.ordered_items.reduce((total, item) => total + (item.unit_price), 0).toFixed(2)} PLN
                             </td>
                             <td>
                                 <ul>
-                                    {order.products.map((item, index) => (
+                                    {order.ordered_items.map((item, index) => (
                                         <li key={index}>
-                                            {item.product.name} (x{item.quantity})
+                                            {item.name}
                                         </li>
                                     ))}
                                 </ul>
@@ -144,10 +174,7 @@ const ListOrders: React.FC = () => {
                                                 <strong>Ocena:</strong> {order.opinion.rating} / 5
                                             </div>
                                             <div className="mb-2">
-                                                <strong>Treść:</strong> {order.opinion.content}
-                                            </div>
-                                            <div className="mb-2">
-                                                <strong>Data:</strong> {new Date(order.opinion.createdAt).toLocaleDateString()}
+                                                <strong>Treść:</strong> {order.opinion.description}
                                             </div>
                                         </>
                                     ) : (
@@ -156,36 +183,36 @@ const ListOrders: React.FC = () => {
                                 </td>
                             ) : (
                                 <td className="text-center">
-                                    {selectedStatus === 'NIEZATWIERDZONE' && (
+                                    {selectedStatus === 'UNAPPROVED' && (
                                         <>
                                             <button
                                                 className="btn btn-success btn-sm me-2"
-                                                onClick={() => changeOrderStatus(order._id, 'ZATWIERDZONE')}
+                                                onClick={() => changeOrderStatus(order.id, 'APPROVED')}
                                             >
                                                 <FontAwesomeIcon icon={faCheck} />
                                                 <span className="ms-2">Zatwierdź</span>
                                             </button>
                                             <button
                                                 className="btn btn-danger btn-sm"
-                                                onClick={() => changeOrderStatus(order._id, 'ANULOWANE')}
+                                                onClick={() => changeOrderStatus(order.id, 'ANULOWANE')}
                                             >
                                                 <FontAwesomeIcon icon={faBan} />
                                                 <span className="ms-2">Anuluj</span>
                                             </button>
                                         </>
                                     )}
-                                    {selectedStatus === 'ZATWIERDZONE' && (
+                                    {selectedStatus === 'APPROVED' && (
                                         <>
                                             <button
                                                 className="btn btn-success btn-sm me-2"
-                                                onClick={() => changeOrderStatus(order._id, 'ZREALIZOWANE')}
+                                                onClick={() => changeOrderStatus(order.id, 'ZREALIZOWANE')}
                                             >
                                                 <FontAwesomeIcon icon={faCheck} />
                                                 <span className="ms-2">Zrealizowano</span>
                                             </button>
                                             <button
                                                 className="btn btn-danger btn-sm"
-                                                onClick={() => changeOrderStatus(order._id, 'ANULOWANE')}
+                                                onClick={() => changeOrderStatus(order.id, 'ANULOWANE')}
                                             >
                                                 <FontAwesomeIcon icon={faBan} />
                                                 <span className="ms-2">Anuluj</span>

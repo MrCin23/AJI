@@ -1,34 +1,35 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 
-// Typ reprezentujący pojedynczy element w koszyku
 interface Product {
-    _id: string;
+    id: string;
     name: string;
-    price: number;
-    quantity: number;
-    [key: string]: any; // Opcjonalne dodatkowe pola
+    description: string;
+    unit_price: number;
+    unit_weight: number;
+    category: Category;
 }
 
-// Typy kontekstu koszyka
+interface Category {
+    id: string;
+    name: string;
+}
+
 interface CartContextType {
     cart: Product[];
     addToCart: (product: Product) => void;
-    increaseQuantity: (_id: string) => void;
-    decreaseQuantity: (_id: string) => void;
-    removeFromCart: (_id: string) => void;
+    increaseQuantity: (id: string) => void;
+    decreaseQuantity:(id: string) => void;
+    removeFromCart: (id: string) => void;
     clearCart: () => void;
 }
 
-// Typy dla komponentu CartProvider
 interface CartProviderProps {
     children: ReactNode;
 }
 
-// Tworzenie kontekstu z typowaniem
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Komponent dostarczający kontekst
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     const [cart, setCart] = useState<Product[]>([]);
 
@@ -44,52 +45,38 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     };
 
     const addToCart = (product: Product) => {
-        const existingItem = cart.find(item => item._id === product._id);
         let updatedCart: Product[];
-
-        if (existingItem) {
-            updatedCart = cart.map(item =>
-                item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
-            );
+        const item = cart.find(item => item.id === product.id);
+        if(item){
+            updatedCart = [...cart, { ...item }];
+            setCart(updatedCart);
+            saveCartToCookie(updatedCart);
         } else {
-            updatedCart = [...cart, { ...product, quantity: 1 }];
+            throw new Error("Cannot find product");
         }
+    };
 
+    // const updateProduct = (id: string, quantity: number) => {
+    //     const updatedCart = cart.map(item =>
+    //         item.id === id ? { ...item, quantity } : item
+    //     );
+    //     setCart(updatedCart);
+    //     saveCartToCookie(updatedCart);
+    // };
+
+    const removeFromCart = (id: string) => {
+        const updatedCart = cart.filter(item => item.id !== id);
         setCart(updatedCart);
         saveCartToCookie(updatedCart);
     };
 
-    const updateProduct = (_id: string, quantity: number) => {
-        const updatedCart = cart.map(item =>
-            item._id === _id ? { ...item, quantity } : item
-        );
-        setCart(updatedCart);
-        saveCartToCookie(updatedCart);
+    const increaseQuantity = (id: string) => {
+        const item = cart.find(item => item.id === id);
+        addToCart(item!)
     };
 
-    const removeFromCart = (_id: string) => {
-        const updatedCart = cart.filter(item => item._id !== _id);
-        setCart(updatedCart);
-        saveCartToCookie(updatedCart);
-    };
-
-    const increaseQuantity = (_id: string) => {
-        const item = cart.find(item => item._id === _id);
-        if (item) {
-            updateProduct(_id, item.quantity + 1);
-        }
-    };
-
-    const decreaseQuantity = (_id: string) => {
-        const item = cart.find(item => item._id === _id);
-        if (item) {
-            const newQuantity = item.quantity - 1;
-            if (newQuantity > 0) {
-                updateProduct(_id, newQuantity);
-            } else {
-                removeFromCart(_id); // Usuń produkt, jeśli ilość spadnie do zera
-            }
-        }
+    const decreaseQuantity = (id: string) => {
+        removeFromCart(id)
     };
 
     const clearCart = () => {
@@ -106,7 +93,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     );
 };
 
-// Hook do używania kontekstu koszyka
 export const useCart = (): CartContextType => {
     const context = useContext(CartContext);
     if (!context) {

@@ -10,12 +10,11 @@ import ProtectedRoute from './components/ProtectedRoutes';
 import Login from './components/default/Login';
 import Register from './components/default/Register';
 import ProductList from './components/default/ListProducts';
-import Opinions from './components/default/Opinions';
+// import Opinions from './components/default/Opinions';
 
 import Cart from './components/client/Cart';
 import MyOrders from './components/client/MyOrders';
 
-import EditProduct from './components/employee/EditProduct';
 import OrderTable from './components/employee/ListOrders';
 import InitDB from './components/employee/InitDB';
 
@@ -30,26 +29,22 @@ const App: React.FC = () => {
                             <Route path="/" element={<ProductList />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
-                            <Route path="/opinions" element={<Opinions />} />
+                            {/*<Route path="/opinions" element={<Opinions />} />*/}
                             <Route
                                 path="/user/cart"
-                                element={<ProtectedRoute requiredRole="KLIENT"><Cart /></ProtectedRoute>}
+                                element={<ProtectedRoute requiredRole="CLIENT"><Cart /></ProtectedRoute>}
                             />
                             <Route
                                 path="/user/orders"
-                                element={<ProtectedRoute requiredRole="KLIENT"><MyOrders /></ProtectedRoute>}
-                            />
-                            <Route
-                                path="/staff/edit/:id"
-                                element={<ProtectedRoute requiredRole="PRACOWNIK"><EditProduct /></ProtectedRoute>}
+                                element={<ProtectedRoute requiredRole="CLIENT"><MyOrders /></ProtectedRoute>}
                             />
                             <Route
                                 path="/staff/orders"
-                                element={<ProtectedRoute requiredRole="PRACOWNIK"><OrderTable /></ProtectedRoute>}
+                                element={<ProtectedRoute requiredRole="EMPLOYEE"><OrderTable /></ProtectedRoute>}
                             />
                             <Route
                                 path="/init"
-                                element={<ProtectedRoute requiredRole="PRACOWNIK"><InitDB /></ProtectedRoute>}
+                                element={<ProtectedRoute requiredRole="EMPLOYEE"><InitDB /></ProtectedRoute>}
                             />
                             <Route path="*" element={<Navigate to="/" />} />
                         </Routes>
@@ -61,3 +56,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+

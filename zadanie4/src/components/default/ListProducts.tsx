@@ -8,15 +8,16 @@ import { useCart } from '../../contexts/CartContext';
 import { useUser } from '../../contexts/UserContext';
 
 interface Product {
-    _id: string;
+    id: string;
     name: string;
     description: string;
-    price: number;
-    category: string;
+    unit_price: number;
+    unit_weight: number;
+    category: Category;
 }
 
 interface Category {
-    _id: string;
+    id: string;
     name: string;
 }
 
@@ -54,7 +55,7 @@ const ListProducts: React.FC = () => {
             result = result.filter((p) => p.name.toLowerCase().includes(filter.name.toLowerCase()));
         }
         if (filter.category) {
-            result = result.filter((p) => p.category.toLowerCase() === filter.category.toLowerCase());
+            result = result.filter((p) => p.category.name.toLowerCase() === filter.category.toLowerCase());
         }
         setFilteredProducts(result);
     };
@@ -68,7 +69,7 @@ const ListProducts: React.FC = () => {
     };
 
     const isProductInCart = (productId: string): boolean => {
-        return cart.some((item: Product) => item._id === productId);
+        return cart.some((item: Product) => item.id === productId);
     };
 
     useEffect(() => {
@@ -96,7 +97,7 @@ const ListProducts: React.FC = () => {
                     >
                         <option value="">Wszystkie kategorie</option>
                         {categories.map((category) => (
-                            <option key={category._id} value={category.name}>
+                            <option key={category.id} value={category.name}>
                                 {category.name}
                             </option>
                         ))}
@@ -115,32 +116,32 @@ const ListProducts: React.FC = () => {
                     </thead>
                     <tbody>
                     {filteredProducts.map((product) => (
-                        <tr key={product._id} className="align-middle">
+                        <tr key={product.id} className="align-middle">
                             <td>{product.name}</td>
                             <td>{product.description}</td>
-                            <td className="text-center">{product.price} zł</td>
+                            <td className="text-center">{product.unit_price} zł</td>
                             <td className="text-center">
                                 {!user ? (
                                     <span>Zaloguj się, aby wykonać akcję</span>
                                 ) : (
                                     <>
-                                        {user?.role === 'KLIENT' && (
+                                        {user?.role === 'CLIENT' && (
                                             <button
                                                 className={`btn btn-sm ${
-                                                    isProductInCart(product._id) ? 'btn-success' : 'btn-primary'
+                                                    isProductInCart(product.id) ? 'btn-success' : 'btn-primary'
                                                 }`}
                                                 onClick={() => handleAddToCart(product)}
                                             >
                                                 <FontAwesomeIcon icon={faCartShopping} />
                                                 <span className="ms-2">
-                                                        {isProductInCart(product._id) ? 'Dodano' : 'Dodaj do koszyka'}
+                                                        {isProductInCart(product.id) ? 'Dodano' : 'Dodaj do koszyka'}
                                                     </span>
                                             </button>
                                         )}
-                                        {user?.role === 'PRACOWNIK' && (
+                                        {user?.role === 'EMPLOYEE' && (
                                             <button
                                                 className="btn btn-success btn-sm"
-                                                onClick={() => editProduct(product._id)}
+                                                onClick={() => editProduct(product.id)}
                                             >
                                                 <FontAwesomeIcon icon={faPen} />
                                                 <span className="ms-2">Edytuj</span>

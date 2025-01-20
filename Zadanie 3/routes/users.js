@@ -64,4 +64,8 @@ router.get('/new/token', verifyToken, async function (req, res, next) {
   res.status(StatusCodes.OK).send(generateToken(await userRepository.findByLogin(req.user.login)));
 })
 
+router.get('/auth/me', verifyToken, (req, res) => {
+  res.json(req.user)
+});
+
 module.exports = router;

@@ -4,10 +4,6 @@ import { Link, NavLink } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useCart } from '../contexts/CartContext';
 
-interface User {
-    role: 'KLIENT' | 'PRACOWNIK';
-}
-
 const Navbar: React.FC = () => {
     const { user, logout } = useUser();
     const { clearCart } = useCart();
@@ -16,8 +12,8 @@ const Navbar: React.FC = () => {
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
             <div className="container">
                 <Link className="navbar-brand" to="/">
-                    <img src={process.env.PUBLIC_URL + '/shopping-cart.png'} alt="Logo sklepu" className="d-inline-block align-text-top" />
-                    <span className="ms-2">Sklep</span>
+                    <img src={"../public/cpu_icon.png"} height="64" width="64" alt="Logo sklepu" className="d-inline-block align-text-top" />
+                    <span className="ms-2">Sklep z częściami komputerowymi</span>
                 </Link>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
@@ -28,7 +24,7 @@ const Navbar: React.FC = () => {
                             <NavLink className="nav-link" to="/">Lista produktów</NavLink>
                         </li>
 
-                        {user?.role === 'KLIENT' && (
+                        {user?.role === 'CLIENT' && (
                             <>
                                 <li className="nav-item">
                                     <NavLink className="nav-link" to="/user/cart">Koszyk</NavLink>
@@ -39,7 +35,7 @@ const Navbar: React.FC = () => {
                             </>
                         )}
 
-                        {user?.role === 'PRACOWNIK' && (
+                        {user?.role === 'EMPLOYEE' && (
                             <>
                                 <li className="nav-item">
                                     <NavLink className="nav-link" to="/staff/orders">Zamówienia</NavLink>
