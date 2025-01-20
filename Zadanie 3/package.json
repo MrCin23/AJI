@@ -9,7 +9,7 @@
     "bcryptjs": "^2.4.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
-    "express": "~4.16.1",
+    "express": "5.0.0",
     "fs": "^0.0.1-security",
     "groq-sdk": "^0.8.0",
     "http-errors": "~1.6.3",
@@ -19,7 +19,7 @@
     "morgan": "~1.9.1",
     "objection": "^3.1.5",
     "pg": "^8.13.1",
-    "pug": "2.0.0-beta11",
+    "pug": "3.0.3",
     "sequelize": "^6.37.5",
     "uuid": "^11.0.3"
   }
