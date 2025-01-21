@@ -24,6 +24,7 @@ class Product extends Model {
 
 
     static get relationMappings() {
+        const Category = require('./Category');
         return {
             category: {
                 relation: Model.BelongsToOneRelation,

@@ -34,6 +34,7 @@ const verifyToken = (req, res, next) => {
 router.post('/login', async function (req, res, next) {
   try {
     var user = await userRepository.login(req.body);
+    console.log(user);
     if(user){
       res.status(StatusCodes.OK).send(generateToken(user));
     }

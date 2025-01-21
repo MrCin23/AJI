@@ -15,11 +15,16 @@ interface Category {
     name: string;
 }
 
+interface CartItem {
+    product: Product;
+    quantity: number;
+}
+
 interface CartContextType {
-    cart: Product[];
+    cart: CartItem[];
     addToCart: (product: Product) => void;
     increaseQuantity: (id: string) => void;
-    decreaseQuantity:(id: string) => void;
+    decreaseQuantity: (id: string) => void;
     removeFromCart: (id: string) => void;
     clearCart: () => void;
 }
@@ -31,7 +36,7 @@ interface CartProviderProps {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-    const [cart, setCart] = useState<Product[]>([]);
+    const [cart, setCart] = useState<CartItem[]>([]);
 
     useEffect(() => {
         const storedCart = Cookies.get('cart');
@@ -40,43 +45,52 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
     }, []);
 
-    const saveCartToCookie = (cart: Product[]) => {
+    const saveCartToCookie = (cart: CartItem[]) => {
         Cookies.set('cart', JSON.stringify(cart), { expires: 7 });
     };
 
     const addToCart = (product: Product) => {
-        let updatedCart: Product[];
-        const item = cart.find(item => item.id === product.id);
-        if(item){
-            updatedCart = [...cart, { ...item }];
-            setCart(updatedCart);
-            saveCartToCookie(updatedCart);
+        const existingItem = cart.find(item => item.product.id === product.id);
+        let updatedCart;
+        if (existingItem) {
+            updatedCart = cart.map(item =>
+                item.product.id === product.id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+            );
         } else {
-            throw new Error("Cannot find product");
+            updatedCart = [...cart, { product, quantity: 1 }];
         }
-    };
-
-    // const updateProduct = (id: string, quantity: number) => {
-    //     const updatedCart = cart.map(item =>
-    //         item.id === id ? { ...item, quantity } : item
-    //     );
-    //     setCart(updatedCart);
-    //     saveCartToCookie(updatedCart);
-    // };
-
-    const removeFromCart = (id: string) => {
-        const updatedCart = cart.filter(item => item.id !== id);
         setCart(updatedCart);
         saveCartToCookie(updatedCart);
     };
 
     const increaseQuantity = (id: string) => {
-        const item = cart.find(item => item.id === id);
-        addToCart(item!)
+        const updatedCart = cart.map(item =>
+            item.product.id === id
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+        );
+        setCart(updatedCart);
+        saveCartToCookie(updatedCart);
     };
 
     const decreaseQuantity = (id: string) => {
-        removeFromCart(id)
+        const updatedCart = cart
+            .map(item =>
+                item.product.id === id && item.quantity > 1
+                    ? { ...item, quantity: item.quantity - 1 }
+                    : item
+            )
+            .filter(item => item.quantity > 0);
+        setCart(updatedCart);
+        saveCartToCookie(updatedCart);
+    };
+
+    const removeFromCart = (id: string) => {
+        const updatedCart = cart.filter(item => item.product.id !== id);
+        setCart(updatedCart);
+        saveCartToCookie(updatedCart);
     };
 
     const clearCart = () => {

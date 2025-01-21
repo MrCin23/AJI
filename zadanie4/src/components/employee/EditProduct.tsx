@@ -1,225 +1,211 @@
-// import React, { useState, useEffect } from 'react';
-// import { useParams } from 'react-router-dom';
-// import axios from '../../api/Axios';
-//
-// interface Product {
-//     id: string;
-//     name: string;
-//     description: string;
-//     unit_price: number;
-//     unit_weight: number;
-//     categoryid: string;
-//     category: string;
-// }
-//
-// interface ErrorMessages {
-//     name?: string;
-//     description?: string;
-//     price?: string;
-//     weight?: string;
-//     category?: string;
-//     general?: string;
-// }
-//
-// interface ValidationState {
-//     name: boolean;
-//     description: boolean;
-//     price: boolean;
-//     weight: boolean;
-//     category: boolean;
-// }
-//
-// const EditProduct: React.FC = () => {
-//     const { id } = useParams<{ id: string }>();
-//     const [product, setProduct] = useState<Product>({
-//         id: '',
-//         name: '',
-//         description: '',
-//         unit_price: 0,
-//         unit_weight: 0,
-//         categoryid: '',
-//         category: ''
-//     });
-//     const [categories, setCategories] = useState<Category[]>([]);
-//     const [errorMessages, setErrorMessages] = useState<ErrorMessages>({});
-//     // const [validationState, setValidationState] = useState<ValidationState>({
-//     //     name: true,
-//     //     description: true,
-//     //     price: true,
-//     //     weight: true,
-//     //     category: true
-//     // });
-//     const [successMessage, setSuccessMessage] = useState<string>('');
-//
-//     useEffect(() => {
-//         axios.get(`/products/${id}`)
-//             .then(response => {
-//                 setProduct(response.data);
-//             })
-//             .catch(error => {
-//                 console.error('There was an error fetching the product!', error);
-//             });
-//     }, [id]);
-//
-//     useEffect(() => {
-//         axios.get('/categories')
-//             .then(response => {
-//                 setCategories(response.data);
-//             })
-//             .catch(error => {
-//                 console.error('Error fetching categories', error);
-//             });
-//     }, []);
-//
-//     const fetchSeoDescription = () => {
-//         axios.get(`/products/${id}/seo-description`)
-//             .then(response => {
-//                 setProduct({ ...product, description: response.data.seoDescription });
-//             })
-//             .catch(error => {
-//                 console.error('Error fetching SEO description', error);
-//             });
-//     };
-//
-//     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-//         const { name, value } = e.target;
-//         setProduct({ ...product, [name]: value });
-//     };
-//
-//     const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-//         setProduct({ ...product, category: e.target.value });
-//     };
-//
-//     const handleSubmit = async (e: React.FormEvent) => {
-//         e.preventDefault();
-//
-//         setErrorMessages({});
-//         setSuccessMessage('');
-//
-//         try {
-//             await axios.put(`/products/${id}`, product);
-//             setSuccessMessage('Produkt został pomyślnie zaktualizowany.');
-//         } catch (error: any) {
-//             if (error.response && error.response.data.detail) {
-//                 if (Array.isArray(error.response.data.detail)) {
-//                     const errors = error.response.data.detail.reduce((acc: any, err: any) => {
-//                         acc[err.field] = err.message;
-//                         return acc;
-//                     }, {});
-//                     setErrorMessages(errors);
-//                 } else {
-//                     setErrorMessages({ general: error.response.data.detail });
-//                 }
-//
-//                 setValidationState((prevState) => {
-//                     const updatedValidationState = { ...prevState };
-//                     if (Array.isArray(error.response.data.detail)) {
-//                         error.response.data.detail.forEach((err: any) => {
-//                             updatedValidationState[err.field] = false;
-//                         });
-//                     }
-//                     return updatedValidationState;
-//                 });
-//             } else {
-//                 setErrorMessages({ general: 'Wystąpił błąd podczas aktualizacji produktu. Spróbuj ponownie później.' });
-//             }
-//         }
-//     };
-//
-//     return (
-//         <div className="container mt-5">
-//             <h2>Edytuj produkt</h2>
-//     <form onSubmit={handleSubmit}>
-//     <div className="mb-3">
-//     <label htmlFor="name" className="form-label">Nazwa</label>
-//         <input
-//     type="text"
-//     className={`form-control ${errorMessages.name ? 'is-invalid' : ''}`}
-//     id="name"
-//     name="name"
-//     value={product.name}
-//     onChange={handleInputChange}
-//     required
-//     />
-//     {errorMessages.name && <div className="invalid-feedback">{errorMessages.name}</div>}
-//             </div>
-//             <div className="mb-3">
-//         <label htmlFor="description" className="form-label">Opis</label>
-//         <div className="input-group">
-//         <textarea
-//             className={`form-control ${errorMessages.description ? 'is-invalid' : ''}`}
-//     id="description"
-//     name="description"
-//     value={product.description}
-//     onChange={handleInputChange}
-//     required
-//     />
-//     <button
-//         type="button"
-//     className="btn btn-info"
-//     onClick={fetchSeoDescription}
-//         >
-//         Wygeneruj opis SEO
-//     </button>
-//     </div>
-//     {errorMessages.description && <div className="invalid-feedback">{errorMessages.description}</div>}
-//         </div>
-//         <div className="mb-3">
-//     <label htmlFor="price" className="form-label">Cena</label>
-//         <input
-//         type="number"
-//         className={`form-control ${errorMessages.price ? 'is-invalid' : ''}`}
-//         id="price"
-//         name="price"
-//         value={product.price}
-//         onChange={handleInputChange}
-//         required
-//         />
-//         {errorMessages.price && <div className="invalid-feedback">{errorMessages.price}</div>}
-//                 </div>
-//                 <div className="mb-3">
-//             <label htmlFor="weight" className="form-label">Waga [kg]</label>
-//             <input
-//             type="number"
-//             className={`form-control ${errorMessages.weight ? 'is-invalid' : ''}`}
-//         id="weight"
-//         name="weight"
-//         value={product.weight}
-//         onChange={handleInputChange}
-//         required
-//         />
-//         {errorMessages.weight && <div className="invalid-feedback">{errorMessages.weight}</div>}
-//                 </div>
-//                 <div className="mb-3">
-//             <label htmlFor="category" className="form-label">Kategoria</label>
-//             <select
-//             className={`form-control ${errorMessages.category ? 'is-invalid' : ''}`}
-//         id="category"
-//         name="category"
-//         value={product.category}
-//         onChange={handleCategoryChange}
-//         required
-//         >
-//         {categories.map((category) => (
-//                 <option key={category._id} value={category.name}>
-//             {category.name}
-//             </option>
-//     ))}
-//         </select>
-//         {errorMessages.category && <div className="invalid-feedback">{errorMessages.category}</div>}
-//             </div>
-//             <button type="submit" className="btn btn-primary">Zapisz zmiany</button>
-//         </form>
-//             {errorMessages.general && (
-//                 <div className="alert alert-danger">{errorMessages.general}</div>
-//             )}
-//             {successMessage && (
-//                 <div className="alert alert-success" role="alert">
-//                 {successMessage}
-//                 </div>
-//             )}
-//             </div>
-//         );
-//         };
-//
-//         export default EditProduct;
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from '../../api/Axios';  // Adjust the path based on your setup
+
+interface Category {
+    id: string;
+    name: string;
+}
+
+interface Product {
+    id: number;
+    name: string;
+    description: string;
+    unit_price: number;
+    unit_weight: number;
+    category_id: Category;
+}
+
+const EditProduct: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    // const history = useHistory();
+
+    const [product, setProduct] = useState<Product | null>(null);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [name, setName] = useState<string>('');
+    const [description, setDescription] = useState<string>('');
+    const [unitPrice, setUnitPrice] = useState<number>(0);
+    const [unitWeight, setUnitWeight] = useState<number>(0);
+    const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+    const [nameError, setNameError] = useState<string>('');
+    const [priceError, setPriceError] = useState<string>('');
+    const [weightError, setWeightError] = useState<string>('');
+    const [categoryError, setCategoryError] = useState<string>('');
+
+    // Fetch product details and categories
+    useEffect(() => {
+        // Fetch product data by ID
+        axios.get(`/products/${id}`)
+            .then((response) => {
+                const fetchedProduct = response.data;
+                setProduct(fetchedProduct);
+                setName(fetchedProduct.name);
+                setDescription(fetchedProduct.description);
+                setUnitPrice(fetchedProduct.unit_price);
+                setUnitWeight(fetchedProduct.unit_weight);
+                setSelectedCategory(fetchedProduct.category.id);
+            })
+            .catch((error) => {
+                console.error('Error fetching product:', error);
+            });
+
+        // Fetch categories
+        axios.get('/categories')
+            .then((response) => {
+                setCategories(response.data);
+            })
+            .catch((error) => {
+                console.error('Error fetching categories:', error);
+            });
+    }, [id]);
+
+    // Validation functions
+    const validateName = () => {
+        if (name.trim() === '') {
+            setNameError('Name is required');
+            return false;
+        }
+        setNameError('');
+        return true;
+    };
+
+    const validatePrice = () => {
+        if (unitPrice <= 0) {
+            setPriceError('Price must be a positive number');
+            return false;
+        }
+        setPriceError('');
+        return true;
+    };
+
+    const validateWeight = () => {
+        if (unitWeight <= 0) {
+            setWeightError('Weight must be a positive number');
+            return false;
+        }
+        setWeightError('');
+        return true;
+    };
+
+    const validateCategory = () => {
+        if (selectedCategory === '') {
+            setCategoryError('Category is required');
+            return false;
+        }
+        setCategoryError('');
+        return true;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // Run validation before submitting
+        const isValidName = validateName();
+        const isValidPrice = validatePrice();
+        const isValidWeight = validateWeight();
+        const isValidCategory = validateCategory();
+
+        if (!(isValidName && isValidPrice && isValidWeight && isValidCategory)) {
+            return;  // Stop submission if validation fails
+        }
+
+        const updatedProduct = {
+            name,
+            description,
+            unit_price: +unitPrice,
+            unit_weight: +unitWeight,
+            category_id: +selectedCategory,  // Assuming category is selected by ID
+        };
+
+        try {
+            // Send PUT request to update the product
+            const response = await axios.put(`/products/${id}`, updatedProduct);
+            console.log('Product updated successfully:', response.data);
+
+            // Redirect to product detail page or list after update
+            // history.push(`/products/${id}`);
+        } catch (error) {
+            console.error('Error updating product:', error);
+        }
+    };
+
+    return (
+        <div className="edit-product-container">
+            <h1>Edit Product</h1>
+
+            {product ? (
+                <form onSubmit={handleSubmit}>
+                    <div>
+                        <label htmlFor="name">Name:</label>
+                        <input
+                            type="text"
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            onBlur={validateName}
+                        />
+                        {nameError && <p className="error">{nameError}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="description">Description:</label>
+                        <textarea
+                            id="description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="unitPrice">Price:</label>
+                        <input
+                            type="number"
+                            id="unitPrice"
+                            value={unitPrice}
+                            onChange={(e) => setUnitPrice(Number(e.target.value))}
+                            onBlur={validatePrice}
+                        />
+                        {priceError && <p className="error">{priceError}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="unitWeight">Weight:</label>
+                        <input
+                            type="number"
+                            id="unitWeight"
+                            value={unitWeight}
+                            onChange={(e) => setUnitWeight(Number(e.target.value))}
+                            onBlur={validateWeight}
+                        />
+                        {weightError && <p className="error">{weightError}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="category">Category:</label>
+                        <select
+                            id="category"
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            onBlur={validateCategory}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                        {categoryError && <p className="error">{categoryError}</p>}
+                    </div>
+
+                    <button type="submit">Save Changes</button>
+                </form>
+            ) : (
+                <p>Loading product...</p>
+            )}
+        </div>
+    );
+};
+
+export default EditProduct;

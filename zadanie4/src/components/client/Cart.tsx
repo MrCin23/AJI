@@ -1,22 +1,39 @@
 import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import axios from "../../api/Axios.ts";
+//
+// interface Category {
+//     id: string;
+//     name: string;
+// }
 
-import { useCart } from '../../contexts/CartContext';
-import axios from '../../api/Axios';
+// interface Product {
+//     id: number;
+//     name: string;
+//     description: string;
+//     unit_price: number;
+//     unit_weight: number;
+//     category: Category;
+// }
 
-// Definicja typu dla zamówienia
-interface OrderData {
-    confirmationDate: number;
-    customerName: string;
-    customerEmail: string;
-    customerPhone: string;
-    products: {
-        product: string;
-        quantity: number;
-        price: number;
-    }[];
+// interface CartItem {
+//     product: Product;
+//     quantity: number;
+// }
+
+interface OrderItem {
+    product_id: number;
+    quantity: number;
+}
+
+interface Order {
+    username: string;
+    email: string;
+    phone_number: string;
+    status_id: number;
+    ordered_items: OrderItem[];
 }
 
 const Cart: React.FC = () => {
@@ -29,177 +46,168 @@ const Cart: React.FC = () => {
     const [cartError, setCartError] = useState<string>('');
     const [diffError, setDiffError] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
-    // const navigate = useNavigate();
+
+    const increaseItemQuantity = (productId: string) => {
+        increaseQuantity(productId);
+    };
+
+    const decreaseItemQuantity = (productId: string) => {
+        decreaseQuantity(productId);
+    };
+
+    const removeItemFromCart = (productId: string) => {
+        removeFromCart(productId);
+    };
+
+    const clearAllItems = () => {
+        clearCart();
+    };
 
     const totalPrice = cart
-        .reduce((total, item) => total + item.price * item.quantity, 0)
-        .toFixed(2);
+        .reduce((total, item) => total + item.product.unit_price * item.quantity, 0);
 
-    const validatePhone = (phone: string): boolean => /^[0-9]{9}$/.test(phone);
-    const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const totalWeight = cart
+        .reduce((total, item) => total + item.product.unit_weight * item.quantity, 0);
 
-    const handleCheckout = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const validateEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
 
+    const validatePhone = (phone: string) => {
+        const phoneRegex = /^[\\+]?[0-9]{0,3}[\W\s\\.]?[(]?[0-9]{3}[)]?[-\s\\.]?[0-9]{3}[-\s\\.]?[0-9]{4,6}$/;
+        return phoneRegex.test(phone);
+
+    };
+
+    const handleSubmit = async () => {
         setEmailError('');
         setPhoneError('');
         setCartError('');
         setDiffError('');
         setSuccessMessage('');
 
-        let hasError = false;
-
-        if (cart.length === 0) {
-            setCartError('Twój koszyk jest pusty. Dodaj produkty, aby kontynuować.');
-            hasError = true;
-        }
-
-        if (!validateEmail(customerEmail)) {
-            setEmailError('Wprowadź poprawny adres email.');
-            hasError = true;
-        }
-
-        if (!validatePhone(customerPhone)) {
-            setPhoneError('Wprowadź poprawny numer telefonu');
-            hasError = true;
-        }
-
-        if (hasError) {
+        if (!cart.length) {
+            setCartError('Your cart is empty.');
             return;
         }
 
-        const orderData: OrderData = {
-            confirmationDate: Date.now(),
-            customerName,
-            customerEmail,
-            customerPhone,
-            products: cart.map(item => ({
-                product: item._id,
-                quantity: item.quantity,
-                price: item.price,
-            })),
+        if (!validateEmail(customerEmail)) {
+            setEmailError('Invalid email address.');
+            return;
+        }
+
+        if (!validatePhone(customerPhone)) {
+            setPhoneError('Invalid phone number.');
+            return;
+        }
+
+
+        const orderItems: OrderItem[] = cart.map((item) => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+        }));
+
+        const order: Order = {
+            username: customerName,
+            email: customerEmail,
+            phone_number: customerPhone,
+            status_id: 1,
+            ordered_items: orderItems,
         };
 
         try {
-            await axios.post('/orders', orderData);
 
-            setSuccessMessage('Twoje zamówienie zostało pomyślnie złożone! Dziękujemy za zakupy.');
+            const response = await axios.post('orders', order);
 
-            clearCart();
-            // navigate("/");
+
+            if (!response.data) {
+                throw new Error('Failed to place order.');
+            }
+
+            const data = await response.data;
+            console.log('Order submitted:', data);
+
+            setSuccessMessage('Order placed successfully!');
+            clearAllItems();
         } catch (error) {
-            console.error('Error placing order:', error);
-            setDiffError('Wystąpił błąd podczas składania zamówienia. Spróbuj ponownie później.');
+            setDiffError('An error occurred while placing your order.');
         }
     };
 
     return (
-        <div className="container mt-5">
-            <h2>Twój koszyk</h2>
-            <div className="row">
-                <div className="col-md-8 table-responsive">
-                    <table className="table table-striped table-hover table-bordered">
-                        <thead className="table-dark">
-                        <tr className="align-middle text-center">
-                            <th>Nazwa</th>
-                            <th>Ilość</th>
-                            <th>Cena</th>
-                            <th>Łączna cena</th>
-                            <th>Akcja</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {cart.map(item => (
-                            <tr key={item._id} className="align-middle text-center">
-                                <td className="text-start">{item.name}</td>
-                                <td>
-                                    <div className="d-flex align-items-center justify-content-center">
-                                        <button
-                                            className="btn btn-sm btn-secondary me-2"
-                                            onClick={() => decreaseQuantity(item._id)}
-                                        >
-                                            <FontAwesomeIcon icon={faMinus} />
-                                        </button>
-                                        {item.quantity}
-                                        <button
-                                            className="btn btn-sm btn-secondary ms-2"
-                                            onClick={() => increaseQuantity(item._id)}
-                                        >
-                                            <FontAwesomeIcon icon={faPlus} />
-                                        </button>
-                                    </div>
-                                </td>
-                                <td>{item.price.toFixed(2)} zł</td>
-                                <td>{(item.price * item.quantity).toFixed(2)} zł</td>
-                                <td>
-                                    <button
-                                        className="btn btn-danger"
-                                        onClick={() => removeFromCart(item._id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                        <span className="ms-2">Usuń</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-                <div className="col-md-4">
-                    <form onSubmit={handleCheckout} className="p-4 border rounded shadow-sm">
-                        <h3 className="text-center mb-4">Informacje kontaktowe</h3>
-                        <div className="mb-3">
-                            <label className="form-label">Imię:</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={customerName}
-                                onChange={(e) => setCustomerName(e.target.value)}
-                                placeholder="Podaj imię"
-                                required
-                            />
-                        </div>
+        <div className="cart-container">
+            <h1>Shopping Cart</h1>
 
-                        <div className="mb-3">
-                            <label className="form-label">Email:</label>
-                            <input
-                                type="email"
-                                className={`form-control ${emailError ? 'is-invalid' : ''}`}
-                                value={customerEmail}
-                                onChange={(e) => setCustomerEmail(e.target.value)}
-                                placeholder="Podaj adres email"
-                                required
-                            />
-                        </div>
+            {cartError && <p className="error">{cartError}</p>}
+            {diffError && <p className="error">{diffError}</p>}
+            {successMessage && <p className="success">{successMessage}</p>}
 
-                        <div className="mb-3">
-                            <label className="form-label">Numer telefonu:</label>
-                            <input
-                                type="tel"
-                                className={`form-control ${phoneError ? 'is-invalid' : ''}`}
-                                value={customerPhone}
-                                onChange={(e) => setCustomerPhone(e.target.value)}
-                                placeholder="Podaj numer telefonu"
-                                required
-                            />
-                        </div>
-                        <hr />
-                        <h3 className="text-center mb-4">Cena zamówienia: {totalPrice} zł</h3>
-                        {diffError && <div className="alert alert-danger">{diffError}</div>}
-                        {emailError && <div className="alert alert-danger">{emailError}</div>}
-                        {phoneError && <div className="alert alert-danger">{phoneError}</div>}
-                        {cartError && <div className="alert alert-danger">{cartError}</div>}
-                        {successMessage && <div className="alert alert-success">{successMessage}</div>}
-                        <button
-                            type="submit"
-                            className="btn btn-success w-100"
-                            disabled={!customerName || !customerEmail || !customerPhone}
-                        >
-                            Złóż zamówienie
-                        </button>
-                    </form>
-                </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {cart.map((item) => (
+                    <tr key={item.product.id}>
+                        <td>{item.product.name}</td>
+                        <td>${item.product.unit_price}</td>
+                        <td>{item.quantity}</td>
+                        <td>${(item.product.unit_price * item.quantity)}</td>
+                        <td>
+                            <button onClick={() => decreaseItemQuantity(item.product.id)}>
+                                <FontAwesomeIcon icon={faMinus} />
+                            </button>
+                            <button onClick={() => increaseItemQuantity(item.product.id)}>
+                                <FontAwesomeIcon icon={faPlus} />
+                            </button>
+                            <button onClick={() => removeItemFromCart(item.product.id)}>
+                                <FontAwesomeIcon icon={faTrash} />
+                            </button>
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+
+            <div className="cart-summary">
+                <p>Total Price: ${totalPrice}</p>
+                <p>Total Weight: {totalWeight} kg</p>
             </div>
+
+            <div className="customer-details">
+                <input
+                    type="text"
+                    placeholder="Name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                />
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                />
+                {emailError && <p className="error">{emailError}</p>}
+
+                <input
+                    type="text"
+                    placeholder="Phone"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+                {phoneError && <p className="error">{phoneError}</p>}
+            </div>
+
+            <button onClick={handleSubmit} className="submit-order">
+                Place Order
+            </button>
         </div>
     );
 };

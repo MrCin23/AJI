@@ -12,11 +12,13 @@ import Register from './components/default/Register';
 import ProductList from './components/default/ListProducts';
 // import Opinions from './components/default/Opinions';
 
+
 import Cart from './components/client/Cart';
 import MyOrders from './components/client/MyOrders';
 
 import OrderTable from './components/employee/ListOrders';
 import InitDB from './components/employee/InitDB';
+import EditProduct from "./components/employee/EditProduct.tsx";
 
 const App: React.FC = () => {
     return (
@@ -41,6 +43,10 @@ const App: React.FC = () => {
                             <Route
                                 path="/staff/orders"
                                 element={<ProtectedRoute requiredRole="EMPLOYEE"><OrderTable /></ProtectedRoute>}
+                            />
+                            <Route
+                                path="/staff/edit/:id"
+                                element={<ProtectedRoute requiredRole="EMPLOYEE"><EditProduct /></ProtectedRoute>}
                             />
                             <Route
                                 path="/init"

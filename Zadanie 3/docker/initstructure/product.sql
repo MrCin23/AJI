@@ -5,5 +5,5 @@ CREATE TABLE product (
     unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price > 0),
     unit_weight NUMERIC(10, 2) NOT NULL CHECK (unit_weight > 0),
     category_id INT NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE CASCADE
+    FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE CASCADE ON UPDATE CASCADE
 );

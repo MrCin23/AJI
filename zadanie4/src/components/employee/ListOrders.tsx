@@ -17,75 +17,82 @@ interface Category {
     name: string;
 }
 
-interface Status {
-    name: "UNAPPROVED" | "APPROVED" | "CANCELLED" | "COMPLETED";
-}
-
-interface Opinion {
-    rating: number;
-    description: string;
+interface OrderItem {
+    product_id: number;
+    quantity: number;
+    product?: Product;
 }
 
 interface Order {
-    id: string;
-    username: string
-    email: string
-    phone_number: number;
-    status: Status;
-    approval_date: string;
-    ordered_items: Product[];
-    opinion?: Opinion;
+    id: number;
+    username: string;
+    email: string;
+    phone_number: string;
+    status: "UNAPPROVED" | "APPROVED" | "CANCELLED" | "COMPLETED";
+    ordered_items: OrderItem[];
+    total_value: number;
 }
 
 const ListOrders: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
-    const [statuses, setStatuses] = useState<Status[]>([]);
-    const [selectedStatus, setSelectedStatus] = useState<string>('');
+    const [statusFilter, setStatusFilter] = useState<string>('UNAPPROVED');
 
-    const fetchOrders = async (statusName: string) => {
+    const fetchOrders = async (status: string) => {
         try {
-            let asdf;
-            switch (statusName) {
-                case "UNAPPROVED":{
-                    asdf = 1
-                    break;
-                }
-                case "APPROVED": {
-                    asdf = 2;
-                    break;
-                }
+            let statusID;
+            switch (status) {
+                case "UNAPPROVED": statusID = 1; break;
+                case "APPROVED": statusID = 2; break;
+                case "CANCELLED": statusID = 3; break;
+                case "COMPLETED": statusID = 4; break;
+                default: throw new Error("unknown order status");
+            }
+
+            const response = await axios.get(`/orders/status/${statusID}`);
+
+            const ordersWithProducts = await Promise.all(response.data.map(async (order: Order) => {
+                const itemsWithProducts = await Promise.all(order.ordered_items.map(async (item) => {
+                    const productResponse = await axios.get(`/products/${item.product_id}`);
+                    return {
+                        ...item,
+                        product: productResponse.data,
+                    };
+                }));
+
+                const totalValue = itemsWithProducts.reduce((sum, item) => {
+                    return sum + (item.product?.unit_price || 0) * item.quantity;
+                }, 0);
+
+                return {
+                    ...order,
+                    ordered_items: itemsWithProducts,
+                    total_value: totalValue,
+                };
+            }));
+
+            setOrders(ordersWithProducts);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        }
+    };
+
+    const changeOrderStatus = async (orderId: number, newStatus: "COMPLETED" | "CANCELLED") => {
+        try {
+            let statusID;
+            switch (newStatus) {
                 case "CANCELLED":{
-                    asdf = 3;
+                    statusID = 3;
                     break;
                 }
                 case "COMPLETED":{
-                    asdf = 4;
+                    statusID = 4;
                     break;
                 }
                 default: {
-                    throw new Error("unknown order status")
+                    throw new Error("unknown order status");
                 }
             }
-            const response = await axios.get(`/orders/status/${asdf}`);
-            setOrders(response.data);
-            console.log(response.data);
-        } catch (error) {
-            console.error('Error while reading orders:', error);
-        }
-    };
-
-    const fetchStatuses = async () => {
-        try {
-            const response = await axios.get('/status');
-            setStatuses(response.data);
-        } catch (error) {
-            console.error('Error while reading order statuses:', error);
-        }
-    };
-
-    const changeOrderStatus = async (orderId: string, newStatusName: string) => {
-        try {
-            await axios.patch(`/orders/${orderId}`, { status: newStatusName });
+            await axios.patch(`/orders/${orderId}`, { status_id: statusID });
             setOrders(orders.filter(order => order.id !== orderId));
         } catch (error) {
             console.error('Error updating order status:', error);
@@ -93,139 +100,75 @@ const ListOrders: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchStatuses();
-    }, []);
-
-    useEffect(() => {
-        if (selectedStatus) {
-            fetchOrders(selectedStatus);
-        }
-    }, [selectedStatus]);
-
-    useEffect(() => {
-        const defaultStatus = statuses.find(status => status.name === 'APPROVED');
-        if (defaultStatus) {
-            setSelectedStatus(defaultStatus.name);
-            fetchOrders(defaultStatus.name);
-        }
-    }, [statuses]);
-
-    const isCompletedOrCancelled = statuses.some(status => {
-        return (status.name === selectedStatus) && (status.name === 'COMPLETED' || status.name === 'CANCELLED');
-    });
+        fetchOrders(statusFilter);
+    }, [statusFilter]);
 
     return (
-        <div className="container mt-4">
-            <h2 className="my-4 text-center">Zamówienia ze statusem</h2>
-            <div className="row mb-3">
-                <div className="col-12 d-flex justify-content-center">
-                    <select
-                        className="form-select form-select-lg text-center fw-bold"
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        value={selectedStatus}
-                        aria-label="Status Select"
-                    >
-                        {statuses
-                            .map(status => (
-                                <option key={status.name} value={status.name}>
-                                    {status.name.charAt(0).toUpperCase() + status.name.slice(1).toLowerCase()}
-                                </option>
+        <div>
+            <h2>Orders</h2>
+            <div>
+                <label htmlFor="statusFilter">Filter by Status: </label>
+                <select
+                    id="statusFilter"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                    <option value="UNAPPROVED">Unapproved</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Order Items</th>
+                    <th>Total Value</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {orders.map(order => (
+                    <tr key={order.id}>
+                        <td>{order.id}</td>
+                        <td>{order.username}</td>
+                        <td>{order.email}</td>
+                        <td>{order.phone_number}</td>
+                        <td>
+                            {order.ordered_items.map(item => (
+                                <div key={item.product_id}>
+                                    {item.product?.name} - {item.quantity} pcs @ {item.product?.unit_price} each
+                                </div>
                             ))}
-                    </select>
-                </div>
-            </div>
-            <div className="table-responsive">
-                <table className="table table-striped table-hover table-bordered">
-                    <thead className="table-dark text-center">
-                    <tr className="align-middle">
-                        <th>Data zatwierdzenia</th>
-                        <th>Wartość</th>
-                        <th>Lista towarów</th>
-                        {isCompletedOrCancelled ? (
-                            <th>Opinia</th>
-                        ) : (
-                            <th>Akcja</th>
-                        )}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {orders.map(order => (
-                        <tr key={order.id} className="align-middle">
-                            <td className="text-center">
-                                {new Date(order.approval_date).toLocaleString()}
-                            </td>
-                            <td className="text-center">
-                                {order.ordered_items.reduce((total, item) => total + (item.unit_price), 0).toFixed(2)} PLN
-                            </td>
-                            <td>
-                                <ul>
-                                    {order.ordered_items.map((item, index) => (
-                                        <li key={index}>
-                                            {item.name}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </td>
-                            {isCompletedOrCancelled ? (
-                                <td>
-                                    {order.opinion ? (
-                                        <>
-                                            <div className="mb-2">
-                                                <strong>Ocena:</strong> {order.opinion.rating} / 5
-                                            </div>
-                                            <div className="mb-2">
-                                                <strong>Treść:</strong> {order.opinion.description}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="text-muted">Brak oceny</div>
-                                    )}
-                                </td>
-                            ) : (
-                                <td className="text-center">
-                                    {selectedStatus === 'UNAPPROVED' && (
-                                        <>
-                                            <button
-                                                className="btn btn-success btn-sm me-2"
-                                                onClick={() => changeOrderStatus(order.id, 'APPROVED')}
-                                            >
-                                                <FontAwesomeIcon icon={faCheck} />
-                                                <span className="ms-2">Zatwierdź</span>
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => changeOrderStatus(order.id, 'ANULOWANE')}
-                                            >
-                                                <FontAwesomeIcon icon={faBan} />
-                                                <span className="ms-2">Anuluj</span>
-                                            </button>
-                                        </>
-                                    )}
-                                    {selectedStatus === 'APPROVED' && (
-                                        <>
-                                            <button
-                                                className="btn btn-success btn-sm me-2"
-                                                onClick={() => changeOrderStatus(order.id, 'ZREALIZOWANE')}
-                                            >
-                                                <FontAwesomeIcon icon={faCheck} />
-                                                <span className="ms-2">Zrealizowano</span>
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => changeOrderStatus(order.id, 'ANULOWANE')}
-                                            >
-                                                <FontAwesomeIcon icon={faBan} />
-                                                <span className="ms-2">Anuluj</span>
-                                            </button>
-                                        </>
-                                    )}
-                                </td>
+                        </td>
+                        <td>{order.total_value}</td>
+                        <td>
+                            {statusFilter === "UNAPPROVED" && (
+                                <>
+                                    <button
+                                        onClick={() => changeOrderStatus(order.id, "COMPLETED")}
+                                        title="Mark as Completed"
+                                    >
+                                        <FontAwesomeIcon icon={faCheck} />
+                                    </button>
+                                    <button
+                                        onClick={() => changeOrderStatus(order.id, "CANCELLED")}
+                                        title="Cancel Order"
+                                    >
+                                        <FontAwesomeIcon icon={faBan} />
+                                    </button>
+                                </>
                             )}
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
         </div>
     );
 };

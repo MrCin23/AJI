@@ -20,19 +20,35 @@ class ProductRepository {
         return Product.query().insertAndFetch(data);
     }
 
+    // async update(id, data) {
+    //     const product = await Product.query().findById(id);
+    //     if (!product) {
+    //         throw new Error(`Not found product with id: ${id}`);
+    //     }
+    //     if(!data.id) {
+    //         return Product.query().patchAndFetchById(id, data);
+    //     }
+    //     else {
+    //         throw new Error(`Cannot change ID of the product!`);
+    //     }
+    // }
+
     async update(id, data) {
-        const product = await Product.query().findById(id);
-        if (!product) {
-            throw new Error(`Not found product with id: ${id}`);
-        }
-        if(!data.id) {
-            return Product.query().patchAndFetchById(id, data);
-        }
-        else {
-            throw new Error(`Cannot change ID of the product!`);
+        try {
+            const product = await Product.query().findById(id);
+            if (!product) {
+                throw new Error(`Not found product with id: ${id}`);
+            }
+            if (!data.id) {
+                return await Product.query().patchAndFetchById(id, data);
+            } else {
+                throw new Error(`Cannot change ID of the product!`);
+            }
+        } catch (error) {
+            console.error('Error updating product:', error.message);
+            throw error;
         }
     }
-
 
     async findByCategory(categoryId) {
         return Product.query().where('categoryId', categoryId).withGraphFetched('category');
