@@ -37,6 +37,30 @@ async function generateSEO(product) {
     return result;
 }
 
+async function smartDescription(product) {
+    const groq = await setupGroq();
+    const chatCompletion = await groq.chat.completions.create({
+        "messages": [
+            {
+                "role": "system",
+                "content": `Na podstawie produktu: ${JSON.stringify(product)} wygeneruj prosty, krótki opis (1-2 zdania). Nie porównuj do innych produktów, opisz jedynie podany. Opis ten ma zachęcać użytkownika do zakupu produktu.`
+            }
+        ],
+        "model": "llama3-8b-8192",
+        "temperature": 1,
+        "max_tokens": 1024,
+        "top_p": 1,
+        "stream": true,
+        "stop": null
+    });
+
+    let result = "";
+    for await (const chunk of chatCompletion) {
+        result += chunk.choices[0]?.delta?.content || '';
+    }
+    return result;
+}
+
 router.get('/', async function (req, res, next) {
     try {
         const val = await productRepo.findAll();
@@ -81,6 +105,16 @@ router.get('/:id/seo-description', async function (req, res, next) {
         res.status(StatusCodes.OK).send(await generateSEO(val));
     } catch (err) {
         console.error('Error fetching categories:', err);
+        res.status(StatusCodes.NOT_FOUND).send(`Product with id ${req.params.id} not found: ${err}`);
+    }
+})
+
+router.get('/:id/smart-description', async function (req, res, next) {
+    try {
+        const val = await productRepo.findById(req.params.id);
+        res.status(StatusCodes.OK).send(await smartDescription(val));
+    } catch (err) {
+        console.error('Error creating smart description:', err);
         res.status(StatusCodes.NOT_FOUND).send(`Product with id ${req.params.id} not found: ${err}`);
     }
 })
