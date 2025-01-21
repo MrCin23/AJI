@@ -9,17 +9,32 @@ const Navbar: React.FC = () => {
     const { clearCart } = useCart();
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div className="container">
-                <Link className="navbar-brand" to="/">
-                    <img src={"../public/cpu_icon.png"} height="64" width="64" alt="Logo sklepu" className="d-inline-block align-text-top" />
-                    <span className="ms-2">Sklep z częściami komputerowymi</span>
+                <Link className="navbar-brand d-flex align-items-center" to="/">
+                    <img
+                        src={"./cpu_icon.png"}
+                        height="48"
+                        width="48"
+                        alt="Logo sklepu"
+                        className="d-inline-block invert-img me-2"
+                    />
+                    <span className="fs-5">Sklep z częściami komputerowymi</span>
                 </Link>
-                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
                     <span className="navbar-toggler-icon"></span>
                 </button>
+
                 <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav me-auto">
+                    <ul className="navbar-nav mx-auto">
                         <li className="nav-item">
                             <NavLink className="nav-link" to="/">Lista produktów</NavLink>
                         </li>
@@ -45,14 +60,24 @@ const Navbar: React.FC = () => {
                                 </li>
                             </>
                         )}
+
                         <li className="nav-item">
                             <NavLink className="nav-link" to="/opinions">Opinie</NavLink>
                         </li>
                     </ul>
+
                     <ul className="navbar-nav ms-auto">
                         {user ? (
                             <li className="nav-item">
-                                <button className="btn btn-link nav-link" onClick={() => { logout(); clearCart(); }}>Wyloguj się</button>
+                                <button
+                                    className="btn btn-link nav-link text-decoration-none"
+                                    onClick={() => {
+                                        logout();
+                                        clearCart();
+                                    }}
+                                >
+                                    Wyloguj się
+                                </button>
                             </li>
                         ) : (
                             <>

@@ -12,7 +12,6 @@ import Register from './components/default/Register';
 import ProductList from './components/default/ListProducts';
 // import Opinions from './components/default/Opinions';
 
-
 import Cart from './components/client/Cart';
 import MyOrders from './components/client/MyOrders';
 
@@ -26,12 +25,11 @@ const App: React.FC = () => {
             <CartProvider>
                 <Router>
                     <Navbar />
-                    <div className="container mt-4">
+                    <div className="container-fluid vh-80 vw-100 px-4 py-3 bg-light">
                         <Routes>
                             <Route path="/" element={<ProductList />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
-                            {/*<Route path="/opinions" element={<Opinions />} />*/}
                             <Route
                                 path="/user/cart"
                                 element={<ProtectedRoute requiredRole="CLIENT"><Cart /></ProtectedRoute>}
@@ -62,5 +60,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-

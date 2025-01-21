@@ -80,17 +80,9 @@ const ListOrders: React.FC = () => {
         try {
             let statusID;
             switch (newStatus) {
-                case "CANCELLED":{
-                    statusID = 3;
-                    break;
-                }
-                case "COMPLETED":{
-                    statusID = 4;
-                    break;
-                }
-                default: {
-                    throw new Error("unknown order status");
-                }
+                case "CANCELLED": statusID = 3; break;
+                case "COMPLETED": statusID = 4; break;
+                default: throw new Error("unknown order status");
             }
             await axios.patch(`/orders/${orderId}`, { status_id: statusID });
             setOrders(orders.filter(order => order.id !== orderId));
@@ -104,12 +96,14 @@ const ListOrders: React.FC = () => {
     }, [statusFilter]);
 
     return (
-        <div>
-            <h2>Orders</h2>
-            <div>
-                <label htmlFor="statusFilter">Filter by Status: </label>
+        <div className="container mt-5 vw-100 vh-100">
+            <h2 className="mb-4 text-center">Orders</h2>
+
+            <div className="mb-4">
+                <label htmlFor="statusFilter" className="form-label me-2">Filter by Status:</label>
                 <select
                     id="statusFilter"
+                    className="form-select d-inline w-auto"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -120,16 +114,16 @@ const ListOrders: React.FC = () => {
                 </select>
             </div>
 
-            <table>
-                <thead>
+            <table className="table table-hover table-bordered">
+                <thead className="table-light">
                 <tr>
-                    <th>Order ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Phone Number</th>
-                    <th>Order Items</th>
-                    <th>Total Value</th>
-                    <th>Actions</th>
+                    <th scope="col">Order ID</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Phone Number</th>
+                    <th scope="col">Order Items</th>
+                    <th scope="col">Total Value</th>
+                    <th scope="col">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -146,23 +140,25 @@ const ListOrders: React.FC = () => {
                                 </div>
                             ))}
                         </td>
-                        <td>{order.total_value}</td>
+                        <td>${order.total_value.toFixed(2)}</td>
                         <td>
                             {statusFilter === "UNAPPROVED" && (
-                                <>
+                                <div className="d-flex justify-content-around">
                                     <button
+                                        className="btn btn-success btn-sm me-2"
                                         onClick={() => changeOrderStatus(order.id, "COMPLETED")}
                                         title="Mark as Completed"
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </button>
                                     <button
+                                        className="btn btn-danger btn-sm"
                                         onClick={() => changeOrderStatus(order.id, "CANCELLED")}
                                         title="Cancel Order"
                                     >
                                         <FontAwesomeIcon icon={faBan} />
                                     </button>
-                                </>
+                                </div>
                             )}
                         </td>
                     </tr>

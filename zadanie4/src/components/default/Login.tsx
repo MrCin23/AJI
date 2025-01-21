@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 
 import axios from '../../api/Axios.ts';
 import { useUser } from '../../contexts/UserContext';
-import {AxiosError} from "axios";
+import { AxiosError } from 'axios';
 
 interface Credentials {
     login: string;
@@ -30,7 +30,7 @@ const Login: React.FC = () => {
         try {
             const response = await axios.post<string>('/users/login', credentials);
 
-            Cookies.set('jwt', response.data, {expires: 1 / 24, secure: true});
+            Cookies.set('jwt', response.data, { expires: 1 / 24, secure: true });
             Cookies.set('refreshToken', response.data, { expires: 7, secure: true });
 
             const userResponse = await axios.get('/users/auth/me');
@@ -39,7 +39,7 @@ const Login: React.FC = () => {
 
             navigate("/");
         } catch (error) {
-            if(error instanceof AxiosError){
+            if (error instanceof AxiosError) {
                 if (error.response && error.response.data && error.response.data.detail) {
                     if (error.response.data.detail === 'The username or password is incorrect.') {
                         setError('Nazwa użytkownika lub/i hasło są niepoprawne');
@@ -50,47 +50,51 @@ const Login: React.FC = () => {
                     setError('Logowanie nie powiodło się. Spróbuj ponownie później');
                 }
             } else {
-                throw new Error("unknown error")
+                throw new Error("unknown error");
             }
         }
     };
 
     return (
-        <div className="container mt-5">
-            <div className="row justify-content-center">
-                <div className="col-md-6 col-lg-4">
-                    <form onSubmit={handleLogin} className="p-4 border rounded shadow-sm">
-                        <h3 className="text-center mb-4">Logowanie</h3>
+        <div className="d-flex justify-content-center align-items-center bg-light">
+            <div className="card shadow-lg p-4" style={{ maxWidth: '400px', width: '100%' }}>
+                <form onSubmit={handleLogin}>
+                    <h3 className="text-center mb-4">Logowanie</h3>
 
-                        {error && (
-                            <div className="alert alert-danger" role="alert">
-                                {error}
-                            </div>
-                        )}
+                    {error && (
+                        <div className="alert alert-danger" role="alert">
+                            {error}
+                        </div>
+                    )}
 
-                        <div className="mb-3">
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Nazwa użytkownika"
-                                value={credentials.login}
-                                onChange={(e) => setCredentials({ ...credentials, login: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <input
-                                type="password"
-                                className="form-control"
-                                placeholder="Hasło"
-                                value={credentials.password}
-                                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary w-100">Zaloguj się</button>
-                    </form>
-                </div>
+                    <div className="mb-3">
+                        <label htmlFor="login" className="form-label">Nazwa użytkownika</label>
+                        <input
+                            type="text"
+                            id="login"
+                            className="form-control"
+                            placeholder="Wprowadź nazwę użytkownika"
+                            value={credentials.login}
+                            onChange={(e) => setCredentials({ ...credentials, login: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label htmlFor="password" className="form-label">Hasło</label>
+                        <input
+                            type="password"
+                            id="password"
+                            className="form-control"
+                            placeholder="Wprowadź hasło"
+                            value={credentials.password}
+                            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary w-100">Zaloguj się</button>
+                </form>
             </div>
         </div>
     );

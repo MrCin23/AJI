@@ -3,25 +3,6 @@ import { useCart } from '../../contexts/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import axios from "../../api/Axios.ts";
-//
-// interface Category {
-//     id: string;
-//     name: string;
-// }
-
-// interface Product {
-//     id: number;
-//     name: string;
-//     description: string;
-//     unit_price: number;
-//     unit_weight: number;
-//     category: Category;
-// }
-
-// interface CartItem {
-//     product: Product;
-//     quantity: number;
-// }
 
 interface OrderItem {
     product_id: number;
@@ -47,15 +28,15 @@ const Cart: React.FC = () => {
     const [diffError, setDiffError] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
 
-    const increaseItemQuantity = (productId: string) => {
+    const increaseItemQuantity = (productId: number) => {
         increaseQuantity(productId);
     };
 
-    const decreaseItemQuantity = (productId: string) => {
+    const decreaseItemQuantity = (productId: number) => {
         decreaseQuantity(productId);
     };
 
-    const removeItemFromCart = (productId: string) => {
+    const removeItemFromCart = (productId: number) => {
         removeFromCart(productId);
     };
 
@@ -77,7 +58,6 @@ const Cart: React.FC = () => {
     const validatePhone = (phone: string) => {
         const phoneRegex = /^[\\+]?[0-9]{0,3}[\W\s\\.]?[(]?[0-9]{3}[)]?[-\s\\.]?[0-9]{3}[-\s\\.]?[0-9]{4,6}$/;
         return phoneRegex.test(phone);
-
     };
 
     const handleSubmit = async () => {
@@ -102,7 +82,6 @@ const Cart: React.FC = () => {
             return;
         }
 
-
         const orderItems: OrderItem[] = cart.map((item) => ({
             product_id: item.product.id,
             quantity: item.quantity,
@@ -117,9 +96,7 @@ const Cart: React.FC = () => {
         };
 
         try {
-
             const response = await axios.post('orders', order);
-
 
             if (!response.data) {
                 throw new Error('Failed to place order.');
@@ -131,20 +108,20 @@ const Cart: React.FC = () => {
             setSuccessMessage('Order placed successfully!');
             clearAllItems();
         } catch (error) {
-            setDiffError('An error occurred while placing your order.');
+            setDiffError(`An error occurred while placing your order. ${error}`);
         }
     };
 
     return (
-        <div className="cart-container">
-            <h1>Shopping Cart</h1>
+        <div className="container mt-5">
+            <h1 className="mb-4 text-center">Shopping Cart</h1>
 
-            {cartError && <p className="error">{cartError}</p>}
-            {diffError && <p className="error">{diffError}</p>}
-            {successMessage && <p className="success">{successMessage}</p>}
+            {cartError && <p className="text-danger">{cartError}</p>}
+            {diffError && <p className="text-danger">{diffError}</p>}
+            {successMessage && <p className="text-success">{successMessage}</p>}
 
-            <table>
-                <thead>
+            <table className="table table-bordered table-hover">
+                <thead className="table-light">
                 <tr>
                     <th>Product</th>
                     <th>Price</th>
@@ -159,15 +136,24 @@ const Cart: React.FC = () => {
                         <td>{item.product.name}</td>
                         <td>${item.product.unit_price}</td>
                         <td>{item.quantity}</td>
-                        <td>${(item.product.unit_price * item.quantity)}</td>
+                        <td>${(item.product.unit_price * item.quantity).toFixed(2)}</td>
                         <td>
-                            <button onClick={() => decreaseItemQuantity(item.product.id)}>
+                            <button
+                                className="btn btn-warning btn-sm me-2"
+                                onClick={() => decreaseItemQuantity(item.product.id)}
+                            >
                                 <FontAwesomeIcon icon={faMinus} />
                             </button>
-                            <button onClick={() => increaseItemQuantity(item.product.id)}>
+                            <button
+                                className="btn btn-success btn-sm me-2"
+                                onClick={() => increaseItemQuantity(item.product.id)}
+                            >
                                 <FontAwesomeIcon icon={faPlus} />
                             </button>
-                            <button onClick={() => removeItemFromCart(item.product.id)}>
+                            <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => removeItemFromCart(item.product.id)}
+                            >
                                 <FontAwesomeIcon icon={faTrash} />
                             </button>
                         </td>
@@ -176,36 +162,39 @@ const Cart: React.FC = () => {
                 </tbody>
             </table>
 
-            <div className="cart-summary">
-                <p>Total Price: ${totalPrice}</p>
-                <p>Total Weight: {totalWeight} kg</p>
+            <div className="d-flex justify-content-between mb-4">
+                <div><strong>Total Price:</strong> ${totalPrice.toFixed(2)}</div>
+                <div><strong>Total Weight:</strong> {totalWeight.toFixed(2)} kg</div>
             </div>
 
-            <div className="customer-details">
+            <div className="mb-4">
                 <input
                     type="text"
+                    className="form-control mb-2"
                     placeholder="Name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                 />
                 <input
                     type="email"
+                    className="form-control mb-2"
                     placeholder="Email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                 />
-                {emailError && <p className="error">{emailError}</p>}
+                {emailError && <p className="text-danger">{emailError}</p>}
 
                 <input
                     type="text"
+                    className="form-control mb-2"
                     placeholder="Phone"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                 />
-                {phoneError && <p className="error">{phoneError}</p>}
+                {phoneError && <p className="text-danger">{phoneError}</p>}
             </div>
 
-            <button onClick={handleSubmit} className="submit-order">
+            <button onClick={handleSubmit} className="btn btn-primary w-100">
                 Place Order
             </button>
         </div>

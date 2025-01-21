@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import Cookies from 'js-cookie';
 
 interface Product {
-    id: string;
+    id: number;
     name: string;
     description: string;
     unit_price: number;
@@ -23,9 +23,9 @@ interface CartItem {
 interface CartContextType {
     cart: CartItem[];
     addToCart: (product: Product) => void;
-    increaseQuantity: (id: string) => void;
-    decreaseQuantity: (id: string) => void;
-    removeFromCart: (id: string) => void;
+    increaseQuantity: (id: number) => void;
+    decreaseQuantity: (id: number) => void;
+    removeFromCart: (id: number) => void;
     clearCart: () => void;
 }
 
@@ -65,7 +65,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         saveCartToCookie(updatedCart);
     };
 
-    const increaseQuantity = (id: string) => {
+    const increaseQuantity = (id: number) => {
         const updatedCart = cart.map(item =>
             item.product.id === id
                 ? { ...item, quantity: item.quantity + 1 }
@@ -75,7 +75,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         saveCartToCookie(updatedCart);
     };
 
-    const decreaseQuantity = (id: string) => {
+    const decreaseQuantity = (id: number) => {
         const updatedCart = cart
             .map(item =>
                 item.product.id === id && item.quantity > 1
@@ -87,7 +87,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         saveCartToCookie(updatedCart);
     };
 
-    const removeFromCart = (id: string) => {
+    const removeFromCart = (id: number) => {
         const updatedCart = cart.filter(item => item.product.id !== id);
         setCart(updatedCart);
         saveCartToCookie(updatedCart);
